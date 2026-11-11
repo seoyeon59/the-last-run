@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>시간이 멈춘 열차</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Nanum+Myeongjo:wght@400;700;800&family=Nanum+Pen+Script&family=Special+Elite&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="fx" aria-hidden="true"></canvas>
+
+<section id="title" class="screen on">
+  <div class="head">
+    <p class="eyebrow">THE LAST RUN · 1986 — 2026</p>
+    <h1>시간이 멈춘 열차</h1>
+  </div>
+  <div class="ticket">
+    <div class="main">
+      <div class="row"><span>승 차 권</span><span>No. 1986-1231</span></div>
+      <div class="route"><span>마지막 운행</span><i></i><span>새벽역</span></div>
+      <dl>
+        <dt>DATE</dt><dt>TIME</dt><dt>CAR</dt>
+        <dd>2026.12.31</dd><dd>23:59</dd><dd>4호차</dd>
+      </dl>
+    </div>
+    <div class="stub">
+      <button id="board" type="button">개찰하고<br>탑승하기</button>
+      <span>ADMIT ONE</span>
+    </div>
+  </div>
+  <p class="note">소리를 켜고 플레이하면 더 좋습니다. 진행 시간은 15분 안팎입니다.</p>
+</section>
+
+<section id="intro" class="screen" aria-live="polite">
+  <div class="bar t"></div><div class="bar b"></div>
+  <div id="kicker"></div>
+  <div id="big"><h2 aria-label="시간이 멈춘 열차"></h2><div class="rule"></div><p>THE TRAIN WHERE TIME STOOD STILL</p></div>
+  <div id="iwatch"></div>
+  <div id="cap"><small></small><p></p></div>
+  <button id="skip" type="button">건너뛰기</button>
+</section>
+
+<section id="game" class="screen">
+  <div class="route-bar">
+    <ol class="stations" id="stations"></ol>
+    <div class="tools">
+      <span class="parts" id="parts">시계 부품 0/4</span>
+      <button class="chip" id="bNotes" type="button">단서 수첩</button>
+      <button class="chip" id="bMarks" type="button" aria-pressed="false">살펴볼 곳 표시</button>
+      <button class="chip" id="bSound" type="button" aria-pressed="true">소리 켜짐</button>
+    </div>
+  </div>
+  <div class="scenebox"><div id="scene"></div><div id="card"><small></small><strong></strong></div></div>
+  <div class="narr"><p class="goal" id="goal"></p><p id="say"></p></div>
+  <div class="inv"><span>소지품</span><div id="items"></div></div>
+</section>
+
+<section id="ending" class="screen">
+  <div id="ewatch"></div>
+  <p id="eline"></p>
+  <div id="eend">
+    <h2>시간은 다시 흐른다</h2>
+    <p>과거에 머물고 싶은 마음과, 그럼에도 앞으로 흘러가야 하는 시간에 관한 이야기.</p>
+    <button class="btn" id="again" type="button">처음부터 다시 타기</button>
+  </div>
+</section>
+
+<div id="modal" role="dialog" aria-modal="true"></div>
+<div id="voice"><small></small><p></p><em>화면을 눌러 계속</em></div>
+<div id="toast" role="status"></div>
+
+<script src="script.js"></script>
+</body>
+</html>
