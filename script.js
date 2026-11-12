@@ -148,23 +148,26 @@ function drawLand(t,o){
   // 달무리
   const mx=W*.8,my=H*.2,mg=c.createRadialGradient(mx,my,0,mx,my,H*.42);mg.addColorStop(0,'rgba(210,225,255,.5)');mg.addColorStop(.08,'rgba(190,210,250,.22)');mg.addColorStop(1,'rgba(160,190,240,0)');
   c.fillStyle=mg;c.fillRect(0,0,W,H);c.fillStyle='rgba(236,242,255,.9)';c.beginPath();c.arc(mx,my,H*.035,0,7);c.fill();
-  // 산
-  const cols=['#111a30','#0c1324','#080d19'],base=[.56,.64,.74],amp=[.2,.16,.12];
-  for(let L=0;L<3;L++){c.fillStyle=cols[L];c.beginPath();c.moveTo(0,H);const p=hills[L];for(let i=0;i<=40;i++){c.lineTo(i/40*W,H*(base[L]-amp[L]*p[i]*(L===0?1:.8)))}c.lineTo(W,H);c.closePath();c.fill();if(L===1){
+  // 고가교와 기차 (dy = 다리 윗면 높이)
+  const bridge=dy=>{
     // 고가교
-    const dy=H*.665,ph=H*.26;c.fillStyle='#06080f';c.fillRect(0,dy,W,H*.022);const n=Math.max(6,Math.round(W/170)),sp=W/n;
+    const ph=H*.26;c.fillStyle='#06080f';c.fillRect(0,dy,W,H*.022);const n=Math.max(6,Math.round(W/170)),sp=W/n;
     for(let i=0;i<=n;i++){c.fillRect(i*sp-sp*.09,dy,sp*.18,ph)}
     c.beginPath();for(let i=0;i<n;i++){c.moveTo(i*sp+sp*.09,dy+sp*.5);c.lineTo(i*sp+sp*.09,dy+H*.02);c.lineTo(i*sp+sp*.91,dy+H*.02);c.lineTo(i*sp+sp*.91,dy+sp*.5);c.arc(i*sp+sp*.5,dy+sp*.5,sp*.41,0,Math.PI,true)}c.fill('evenodd');
     c.strokeStyle='rgba(120,140,190,.25)';c.lineWidth=1;c.beginPath();c.moveTo(0,dy);c.lineTo(W,dy);c.stroke();
     const h=Math.min(H*.055,W*.032);drawTrain(c,o.trainX(h),dy,h,t,o.moving);
-  }}
+  };
+  // 산
+  const cols=['#111a30','#0c1324','#080d19'],base=[.56,.64,.74],amp=[.2,.16,.12];
+  for(let L=0;L<3;L++){c.fillStyle=cols[L];c.beginPath();c.moveTo(0,H);const p=hills[L];for(let i=0;i<=40;i++){c.lineTo(i/40*W,H*(base[L]-amp[L]*p[i]*(L===0?1:.8)))}c.lineTo(W,H);c.closePath();c.fill();if(L===1&&!o.low)bridge(H*.665)}
   // 침엽수 실루엣
   c.fillStyle='#04060c';const rr=mul(5);for(let i=0;i<14;i++){const x=(i<7?rr()*.26:.74+rr()*.26)*W,hh=H*(.16+rr()*.22),w=hh*.3;c.beginPath();c.moveTo(x,H-hh);c.lineTo(x+w,H);c.lineTo(x-w,H);c.closePath();c.fill()}
+  if(o.low)bridge(H*o.low);   // 엔딩: 기차를 화면 아래쪽으로
   c.restore();
   if(o.rain){c.strokeStyle='rgba(180,200,240,.34)';c.lineWidth=1;c.beginPath();for(const d of drops){const sp=o.rain===2?0:(.9+d[2])*1.1;const y=((d[1]+t*sp)%1)*H,x=((d[0]-(o.rain===2?0:t*.08))%1+1)%1*W,l=10+d[2]*16;c.moveTo(x,y);c.lineTo(x-l*.18,y+l)}c.stroke()}
 }
 function arch(c,x,y,a){const fl=y+a*.62,sp=y-a*.12;c.moveTo(x-a,fl);c.lineTo(x-a,sp);c.arc(x,sp,a,Math.PI,0,false);c.lineTo(x+a,fl);c.closePath()}
-const TUN={v:7.2,T0:11,T1:62};
+const TUN={v:7.2,T0:8,T1:36};
 function drawTunnel(t){
   const c=cx,p=t*TUN.v,R=Math.hypot(W,H)*.62;
   const bump=Math.pow(Math.max(0,Math.sin(t*9.8)),18)*4;
@@ -217,7 +220,7 @@ function loop(now){
   else if(FX.mode==='tunnel')drawTunnel(t);
   else if(FX.mode==='land')drawLand(t,{rain:1,moving:true,trainX:h=>W*.3-t*W*.004});
   else if(FX.mode==='cab'){drawCab(t);drawShards(dt)}
-  else if(FX.mode==='end'){const k=clamp(t/30,0,1);drawLand(t,{stars:1+k*3,dawn:t>14,moving:true,trainX:h=>W*.34-t*W*.012})}
+  else if(FX.mode==='end'){const k=clamp(t/30,0,1);drawLand(t,{stars:1+k*3,dawn:t>14,moving:true,low:.9,trainX:h=>W*.34-t*W*.012})}
   if(FX.flash>0){cx.fillStyle='rgba(214,228,255,'+FX.flash.toFixed(3)+')';cx.fillRect(0,0,W,H);FX.flash=Math.max(0,FX.flash-dt*.55)}
 }
 requestAnimationFrame(loop);
@@ -225,9 +228,18 @@ requestAnimationFrame(loop);
 /* ═════════ 화면 전환과 오프닝 ═════════ */
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id))}
 let skipFlag=false,cur=null,curHard=false;
-function wait(ms,hard){return new Promise((res,rej)=>{if(skipFlag)return rej('skip');const id=setTimeout(done,ms);function done(){clearTimeout(id);cur=null;skipFlag?rej('skip'):res()}cur=done;curHard=!!hard})}
+/* 화면을 눌러야 넘어가는 곳에 흰 세모를 띄우고, NUDGE_IDLE ms 동안 안 누르면 안내 글자를 띄운다 */
+const NUDGE_IDLE=3000;
+const Nudge={t:0,show(n){this.hide();n.classList.add('show');this.t=setTimeout(()=>n.classList.add('idle'),NUDGE_IDLE)},hide(){clearTimeout(this.t);document.querySelectorAll('.nudge').forEach(x=>x.classList.remove('show','idle'))}};
+function wait(ms,hard){return new Promise((res,rej)=>{if(skipFlag)return rej('skip');const id=ms===Infinity?0:setTimeout(done,ms);function done(){clearTimeout(id);cur=null;skipFlag?rej('skip'):res()}cur=done;curHard=!!hard})}
 const cap=$('#cap'),big=$('#big'),kick=$('#kicker'),iw=$('#iwatch');
-async function line(label,text,ms){cap.classList.remove('show');await wait(450,true);cap.firstElementChild.textContent=label||'';cap.lastElementChild.textContent=text;cap.classList.add('show');await wait(ms||Math.max(3200,text.length*95))}
+async function line(label,text){
+  cap.classList.remove('show');await wait(450,true);
+  cap.firstElementChild.textContent=label||'';cap.querySelector('p').textContent=text;cap.classList.add('show');
+  await wait(600,true);                 // 글자가 떠오르는 동안은 넘기지 않음
+  Nudge.show($('#nudge'));
+  try{await wait(Infinity)}finally{Nudge.hide()}   // 화면을 누를 때까지 기다림
+}
 async function runIntro(){
   skipFlag=false;show('intro');const I=$('#intro');I.classList.remove('wide');big.classList.remove('show');kick.classList.remove('show');cap.classList.remove('show');iw.className='';
   big.querySelector('h2').innerHTML=[...'시간이 멈춘 열차'].map((ch,i)=>'<span style="transition-delay:'+(i*.16)+'s">'+(ch===' '?'&nbsp;':ch)+'</span>').join('');
@@ -289,12 +301,13 @@ document.addEventListener('keydown',e=>{
 $('#board').addEventListener('click',()=>{A.init();A.tick();runIntro()});
 
 /* ═════════ 게임 상태 ═════════ */
-let S={car:4,flags:{},inv:[],clues:[],started:false};
+const fresh=()=>({car:4,reached:4,flags:{},inv:[],notes:[],seen:{},hints:{},started:false});
+let S=fresh();
 const ITEMS={
   case:{n:'빈 회중시계 케이스',ic:IC.case,view:()=>'<div style="width:180px;margin:0 auto 10px">'+watchSVG({spring:has('spring')&&S.flags.fixed,gear:S.flags.fixed,hand:S.flags.fixed,glass:S.flags.fixed})+'</div><p>어느새 주머니에 들어와 있던 시계 케이스. 이것을 지닌 사람만 멈춘 시간 속에서 움직일 수 있는 듯하다.</p><p>'+(S.flags.fixed?'네 개의 부품이 모두 제자리를 찾았다.':'속이 비어 있다. 흩어진 부품 네 개를 찾아야 한다. (현재 '+partCount()+'/4)')+'</p>'},
   diary1:{n:'일기 · 1985년 4월',ic:IC.diary,view:()=>'<div class="hand">1985년 4월.\n오늘 새벽역에서 한 여자를 만났다.\n노란 우산을 쓰고 있던 그녀는 내게 웃으며 인사했다.\n이름은 윤정이라고 했다.\n이상하게도 그 미소가 오래 기억에 남는다.</div>'},
   spring:{n:'태엽',ic:IC.spring,part:1,view:()=>'<p>회중시계의 첫 번째 부품. 금빛 태엽이 손끝에서 희미하게 떨린다.</p>'},
-  photo:{n:'윤정의 사진',ic:IC.photo,view:()=>'<div class="flip" id="flip"><div><div class="f">'+photoArt()+'</div><div class="bk">“노란 우산, 파란 코트, 빨간 목도리, 초록색 기차표. 그날의 널 기억해.”</div></div></div><div class="acts"><button class="btn ghost" type="button" id="flipb">뒷면 보기</button></div>',after:b=>{b.querySelector('#flipb').onclick=e=>{const f=b.querySelector('#flip');f.classList.toggle('back');e.target.textContent=f.classList.contains('back')?'앞면 보기':'뒷면 보기'}}},
+  photo:{n:'윤정의 사진',ic:IC.photo,view:()=>'<div class="flip" id="flip"><div><div class="f">'+photoArt()+'</div><div class="bk">“우산, 코트, 목도리, 기차표. 그날의 널 기억해.”</div></div></div><div class="acts"><button class="btn ghost" type="button" id="flipb">뒷면 보기</button></div>',after:b=>{b.querySelector('#flipb').onclick=e=>{const f=b.querySelector('#flip');f.classList.toggle('back');e.target.textContent=f.classList.contains('back')?'앞면 보기':'뒷면 보기'}}},
   gear:{n:'톱니바퀴',ic:IC.gear,part:1,view:()=>'<p>회중시계의 두 번째 부품. 오르골 안쪽에서 멜로디와 함께 굴러 나왔다.</p>'},
   diary3:{n:'일기 · 3월 14일',ic:IC.diary,view:()=>'<div class="hand">3월 14일.\n윤정이 세상을 떠났다.\n그날 이후 새벽역에는 더 이상 노란 우산이 보이지 않는다.\n하지만 나는 여전히 매일 자정 그곳에 열차를 세운다.\n언젠가 다시 그녀가 서 있을 것만 같아서.</div>'},
   hand:{n:'시계바늘',ic:IC.hand,part:1,view:()=>'<p>회중시계의 세 번째 부품. 별빛을 머금은 듯 차갑게 빛난다.</p>'},
@@ -302,17 +315,24 @@ const ITEMS={
   glass:{n:'유리조각',ic:IC.glass,part:1,view:()=>'<p>회중시계의 네 번째 부품. 깨진 시계 유리의 마지막 조각이다.</p>'},
   letter:{n:'봉인된 편지',ic:IC.letter,view:()=>'<div style="width:200px;margin:0 auto 10px">'+IC.letter+'</div><p>노란 우산 그림이 그려진 편지. 겉봉에는 <b>한시원에게</b>라고 적혀 있다.</p><p>'+(S.flags.given?'편지는 주인에게 돌아갔다.':'봉인이 단단해서 열리지 않는다. 받을 사람의 손에 닿아야 할 것 같다.')+'</p>'}
 };
+const DESC={case:'어느새 주머니에 들어온 빈 케이스',spring:'시계를 움직이는 금빛 태엽',photo:'노란 우산을 든 윤정. 뒷면에 글씨가 있다',gear:'오르골에서 나온 작은 톱니바퀴',hand:'별빛을 머금은 시계바늘',glass:'깨진 시계 유리의 마지막 조각',letter:'“한시원에게”. 단단히 봉인되어 있다'};
+const DOCS=['diary1','diary3','diary4'];
 const has=id=>S.inv.includes(id);
 const partCount=()=>S.inv.filter(i=>ITEMS[i].part).length;
 function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('show'),2400)}
 function say(t){const e=$('#say');e.textContent=t}
-function addItem(id,quiet){if(has(id))return;S.inv.push(id);drawInv(id);if(!quiet){A.get();toast('획득 · '+ITEMS[id].n)}}
-function addClue(t,d){if(S.clues.some(c=>c.t===t))return;S.clues.push({t,d});toast('단서 수첩에 기록 · '+t)}
-function drawInv(newId){
-  const b=$('#items');b.innerHTML='';
-  S.inv.forEach(id=>{const it=ITEMS[id],e=el('button','item'+(id===newId?' new':''),it.ic+'<span>'+it.n+'</span>');e.type='button';e.onclick=()=>showItem(id);b.append(e)});
-  $('#parts').textContent='시계 부품 '+partCount()+'/4';
-  if(newId)b.scrollLeft=b.scrollWidth;
+function addItem(id,quiet){if(has(id))return;S.inv.push(id);renderSide(id);if(!quiet){A.get();toast((DOCS.includes(id)?'기관사의 일기 · ':'소지품 획득 · ')+ITEMS[id].n)}}
+function renderSide(newId){
+  const inv=S.inv.filter(i=>!DOCS.includes(i)),docs=S.inv.filter(i=>DOCS.includes(i));
+  const I=$('#items');I.innerHTML=inv.length?'':'<div class="empty">아직 아무것도 없다</div>';
+  inv.forEach(id=>{const it=ITEMS[id],e=el('button','item'+(id===newId?' new':''),it.ic+'<span><b>'+it.n+'</b>'+DESC[id]+'</span>');e.type='button';e.onclick=()=>showItem(id);I.append(e)});
+  $('#parts').textContent='시계 부품 '+partCount()+' / 4';
+  $('#pslots').innerHTML=['spring','gear','hand','glass'].map(p=>'<span class="'+(has(p)?'on':'')+'" title="'+ITEMS[p].n+(has(p)?'':' (아직 못 찾음)')+'">'+IC[p]+'</span>').join('');
+  const D=$('#docs');D.innerHTML=docs.length?'':'<div class="empty">아직 주운 기록이 없다</div>';
+  docs.forEach(id=>{const e=el('button','docbtn'+(id===newId?' new':''),ITEMS[id].n+'<span>읽기</span>');e.type='button';e.onclick=()=>showItem(id);D.append(e)});
+  $('#docCount').textContent=docs.length+' / 3장';
+  const N=$('#notes');N.innerHTML=S.notes.length?'':'<div class="empty">물건을 살펴보면 여기에 모여요</div>';
+  S.notes.forEach(k=>{const c=+k.split(':')[0],id=k.split(':')[1],m=meta(c,id);if(!m)return;const e=el('button','docbtn',m.label+'<span>'+CARS[c].n+'</span>');e.type='button';e.onclick=()=>openSpot(c,id);N.append(e)});
 }
 function showItem(id,got){const it=ITEMS[id];const b=openModal({k:got?'획득':'소지품',title:it.n,html:it.view()});if(it.after)it.after(b)}
 
@@ -322,7 +342,11 @@ function openModal(o){
   const m=$('#modal');lastFocus=document.activeElement;m.innerHTML='';
   const p=el('div','panel'+(o.wide?' wide':''));
   p.innerHTML='<button class="x" type="button" aria-label="닫기">×</button><p class="k">'+(o.k||'')+'</p><h3>'+o.title+'</h3><div class="body">'+(o.html||'')+'</div>';
-  p.querySelector('.x').onclick=closeModal;m.append(p);m.classList.add('on');m.onclick=e=>{if(e.target===m)closeModal()};
+  p.querySelector('.x').onclick=closeModal;m.append(p);
+  /* 힌트는 '힌트 보기'를 눌러야 보인다. 한 번 본 힌트는 같은 퍼즐을 다시 열어도 보인다 */
+  p.querySelectorAll('.hint').forEach(h=>{const key=o.title;S.hints=S.hints||{};if(S.hints[key])return;h.hidden=true;
+    const bt=el('button','btn ghost hbtn','힌트 보기');bt.type='button';
+    bt.onclick=()=>{S.hints[key]=1;h.hidden=false;h.classList.add('reveal');bt.remove();A.tick()};h.before(bt)});m.classList.add('on');m.onclick=e=>{if(e.target===m)closeModal()};
   p.querySelector('.x').focus();return p.querySelector('.body');
 }
 function closeModal(){$('#modal').classList.remove('on');if(lastFocus&&lastFocus.focus)try{lastFocus.focus()}catch(e){}}
@@ -341,7 +365,8 @@ function puzzle(o){
 }
 function speak(lines,label){return new Promise(res=>{
   const v=$('#voice'),p=v.querySelector('p');let i=0;v.querySelector('small').textContent=label||'';
-  const next=()=>{if(i>=lines.length){v.classList.remove('on');v.onclick=null;return res()}p.remove();p.innerHTML=lines[i++];v.insertBefore(p,v.querySelector('em'))};
+  const nd=$('#vnudge');
+  const next=()=>{if(i>=lines.length){Nudge.hide();v.classList.remove('on');v.onclick=null;return res()}p.remove();p.innerHTML=lines[i++];v.insertBefore(p,nd);Nudge.show(nd)};
   v.classList.add('on');v.onclick=next;next();
 })}
 
@@ -409,7 +434,7 @@ const SCENES={
    door('1호차',S.flags.trunk&&S.flags.sbox)
   +win(330,starWin(0),'stars','별이 보이는 창')+win(720,starWin(1),'stars','별이 보이는 창')+win(1110,starWin(2),'stars','별이 보이는 창')
   // 달력
-  +'<g class="hot" data-id="calendar" tabindex="0" role="button" aria-label="벽 달력"><rect x="604" y="250" width="96" height="124" fill="#f6f1e4" stroke="#2a1c12"/><rect x="604" y="250" width="96" height="30" fill="#6b1d1f"/><text x="652" y="272" text-anchor="middle" font-size="18" font-weight="800" fill="#fde9c0">3월</text>'+Array.from({length:20},(_,i)=>'<rect x="'+(612+(i%5)*17)+'" y="'+(290+Math.floor(i/5)*19)+'" width="11" height="11" fill="#2a1c12" opacity=".22"/>').join('')+'<circle cx="651.5" cy="333.5" r="11" fill="none" stroke="#b3261e" stroke-width="3"/><circle cx="652" cy="246" r="5" fill="url(#gBrass)"/></g>'
+  +'<g class="hot" data-id="calendar" tabindex="0" role="button" aria-label="벽 달력"><rect x="604" y="250" width="96" height="124" fill="#f6f1e4" stroke="#2a1c12"/><rect x="604" y="250" width="96" height="30" fill="#6b1d1f"/><text x="652" y="272" text-anchor="middle" font-size="18" font-weight="800" fill="#fde9c0">3월</text>'+Array.from({length:20},(_,i)=>'<rect x="'+(612+(i%5)*17)+'" y="'+(290+Math.floor(i/5)*19)+'" width="11" height="11" fill="#2a1c12" opacity=".22"/>').join('')+'<circle cx="634.5" cy="295.5" r="9" fill="none" stroke="#b3261e" stroke-width="2.5"/><circle cx="651.5" cy="333.5" r="9" fill="none" stroke="#b3261e" stroke-width="2.5"/><circle cx="668.5" cy="352.5" r="9" fill="none" stroke="#b3261e" stroke-width="2.5"/><circle cx="652" cy="246" r="5" fill="url(#gBrass)"/></g>'
   +seat(300,310,'#3c3566')+seat(690,310,'#3c3566')+seat(1080,310,'#3c3566')
   // 그림책
   +'<g class="hot" data-id="book" tabindex="0" role="button" aria-label="좌석 위 그림책"><path d="M400 640l72 -12l72 12v40l-72 -10l-72 10Z" fill="#f4eedd" stroke="#2a1c12"/><path d="M472 628v42" stroke="#2a1c12"/><path d="M414 648l44 -7M414 660l44 -7" stroke="#2b5b8a" stroke-width="3"/><path transform="translate(508 652) scale(.8)" d="M0 -11Q1.5 -1.5 11 0Q1.5 1.5 0 11Q-1.5 1.5 -11 0Q-1.5 -1.5 0 -11Z" fill="#f2c230"/></g>'
@@ -421,7 +446,7 @@ const SCENES={
  ),
  1:()=>shell({label:'1호차 승무원칸',wall:'#3d4a3c',ceil:'#cfc8ae',trim:'#232b22',dado:'#262e25',floor:'#3b2115',lamps:[520,1060]},
   // 기관실 문
-   '<g class="hot" data-id="door" tabindex="0" role="button" aria-label="기관실 연결문"><rect x="56" y="186" width="188" height="540" rx="8" fill="#0d100d"/><rect x="66" y="196" width="168" height="530" rx="4" fill="'+(S.flags.cabdoor?'#55604f':'#2c342b')+'"/><circle cx="150" cy="300" r="52" fill="'+(S.flags.cabdoor?'#ffb060':'#0a0f1c')+'" stroke="url(#gBrass)" stroke-width="7"/>'+(S.flags.cabdoor?'<circle cx="150" cy="300" r="140" fill="url(#gLamp)"/>':'')+Array.from({length:10},(_,i)=>'<circle cx="'+(78+(i%2)*144)+'" cy="'+(220+Math.floor(i/2)*120)+'" r="4" fill="#8d9a86"/>').join('')+'<rect x="100" y="420" width="100" height="96" rx="4" fill="#f6f1e4" stroke="url(#gBrass)" stroke-width="3"/><rect x="100" y="420" width="100" height="24" fill="#6b1d1f"/><text x="150" y="438" text-anchor="middle" font-size="14" font-weight="800" fill="#fde9c0">12월</text><text x="150" y="494" text-anchor="middle" font-size="40" font-family="Special Elite,monospace" fill="#2a1c12">31</text><rect x="80" y="140" width="140" height="38" rx="4" fill="#120c09" stroke="url(#gBrass)" stroke-width="2"/><text x="150" y="166" text-anchor="middle" font-size="19" font-weight="800" fill="#f0cf7e">◀ 기관실</text></g>'
+   '<g class="hot" data-id="door" tabindex="0" role="button" aria-label="기관실 연결문"><rect x="56" y="186" width="188" height="540" rx="8" fill="#0d100d"/><rect x="66" y="196" width="168" height="530" rx="4" fill="'+(S.flags.cabdoor?'#55604f':'#2c342b')+'"/><circle cx="150" cy="300" r="52" fill="'+(S.flags.cabdoor?'#ffb060':'#0a0f1c')+'" stroke="url(#gBrass)" stroke-width="7"/>'+(S.flags.cabdoor?'<circle cx="150" cy="300" r="140" fill="url(#gLamp)"/>':'')+Array.from({length:10},(_,i)=>'<circle cx="'+(78+(i%2)*144)+'" cy="'+(220+Math.floor(i/2)*120)+'" r="4" fill="#8d9a86"/>').join('')+'<rect x="100" y="420" width="100" height="96" rx="4" fill="#f6f1e4" stroke="url(#gBrass)" stroke-width="3"/><rect x="100" y="420" width="100" height="24" fill="#6b1d1f"/><text x="150" y="438" text-anchor="middle" font-size="14" font-weight="800" fill="#fde9c0">잠금</text><text x="150" y="494" text-anchor="middle" font-size="40" font-family="Special Elite,monospace" fill="#2a1c12">??</text><rect x="80" y="140" width="140" height="38" rx="4" fill="#120c09" stroke="url(#gBrass)" stroke-width="2"/><text x="150" y="166" text-anchor="middle" font-size="19" font-weight="800" fill="#f0cf7e">◀ 기관실</text></g>'
   +'<g class="hot" data-id="plaque" tabindex="0" role="button" aria-label="문 옆 명판"><rect x="270" y="400" width="92" height="64" rx="4" fill="url(#gBrass)"/><path d="M282 420h68M282 434h68M282 448h44" stroke="#2a1c12" stroke-width="3"/></g>'
   // 운행 안내문
   +'<g class="hot" data-id="notice" tabindex="0" role="button" aria-label="운행 안내문"><rect x="410" y="220" width="170" height="230" fill="#f6f1e4" stroke="#2a1c12" stroke-width="2"/><rect x="410" y="220" width="170" height="40" fill="#6b1d1f"/><text x="495" y="247" text-anchor="middle" font-size="19" font-weight="800" fill="#fde9c0">운행 안내</text><path d="M426 284h138M426 304h138M426 324h100M426 360h138M426 380h138M426 400h80" stroke="#2a1c12" stroke-width="3" opacity=".55"/><circle cx="495" cy="216" r="6" fill="#b3261e"/></g>'
@@ -452,20 +477,49 @@ const SCENES={
   +'</svg>'
 };
 const CARS={
- 4:{n:'4호차',sub:'멈춰버린 시간',goal:'열차에 무슨 일이 생겼는지 확인하고 3호차로 이동하기'},
- 3:{n:'3호차',sub:'두 사람의 추억',goal:'두 사람의 관계를 알아내고 두 번째 시계 부품 찾기'},
- 2:{n:'2호차',sub:'돌아오지 않는 사람',goal:'윤정에게 무슨 일이 있었는지, 기관사가 왜 슬퍼하는지 알아내기'},
- 1:{n:'1호차',sub:'마지막 운행의 진실',goal:'기관사가 슬퍼한 이유를 알아내고 마지막 편지 찾기'},
- 0:{n:'기관실',sub:'다시 흐르는 시간',goal:'회중시계를 고치고, 멈춘 열차를 다시 출발시키기'}
+ 4:{n:'4호차',kind:'객실칸',sub:'멈춰버린 시간',goal:'열차에 무슨 일이 생겼는지 확인하고 3호차로 이동하기'},
+ 3:{n:'3호차',kind:'식당칸',sub:'두 사람의 추억',goal:'두 사람의 관계를 알아내고 두 번째 시계 부품 찾기'},
+ 2:{n:'2호차',kind:'객실칸',sub:'돌아오지 않는 사람',goal:'윤정에게 무슨 일이 있었는지, 기관사가 왜 슬퍼하는지 알아내기'},
+ 1:{n:'1호차',kind:'승무원칸',sub:'마지막 운행의 진실',goal:'기관사가 슬퍼한 이유를 알아내고 마지막 편지 찾기'},
+ 0:{n:'기관실',kind:'운전실',sub:'다시 흐르는 시간',goal:'회중시계를 고치고, 멈춘 열차를 다시 출발시키기'}
 };
 const ORDER=[4,3,2,1,0];
+const F=k=>()=>!!S.flags[k];
+/* 칸마다 살펴볼 곳: lock은 퍼즐, clue는 단서 수첩에 기록, look은 그냥 보기, door는 다음 칸 */
+const SPOTS={
+ 4:[{id:'clock',label:'벽시계',type:'lock',done:F('clock')},{id:'suitcase',label:'여행가방',type:'lock',done:F('case4')},{id:'news',label:'좌석 위 신문',type:'clue'},{id:'passenger',label:'멈춘 승객',type:'clue'},{id:'window',label:'창밖',type:'look'},{id:'door',label:'3호차 연결문',type:'door',done:()=>!!(S.flags.clock&&S.flags.case4)}],
+ 3:[{id:'register',label:'금전등록기',type:'lock',done:F('reg')},{id:'musicbox',label:'추억의 오르골',type:'lock',done:F('mbox')},{id:'menu',label:'메뉴판',type:'clue'},{id:'receipt',label:'식탁 위 영수증',type:'clue'},{id:'door',label:'2호차 연결문',type:'door',done:()=>!!(S.flags.reg&&S.flags.mbox)}],
+ 2:[{id:'trunk',label:'낡은 트렁크',type:'lock',done:F('trunk')},{id:'starbox',label:'별이 새겨진 상자',type:'lock',done:F('sbox')},{id:'calendar',label:'벽 달력',type:'clue'},{id:'book',label:'그림책',type:'clue'},{id:'stars',label:'창밖의 별자리',type:'clue'},{id:'door',label:'1호차 연결문',type:'door',done:()=>!!(S.flags.trunk&&S.flags.sbox)}],
+ 1:[{id:'cabinet',label:'기록 보관함',type:'lock',done:F('cab')},{id:'locker',label:'물품 보관함',type:'lock',done:F('letter')},{id:'door',label:'기관실 연결문',type:'lock',done:F('cabdoor')},{id:'notice',label:'운행 안내문',type:'clue'},{id:'plaque',label:'문 옆 명판',type:'clue'}],
+ 0:[{id:'bench',label:'회중시계 고치기',type:'lock',done:F('fixed')},{id:'engineer',label:'한시원 기관사',type:'lock',done:F('given')},{id:'gauges',label:'계기판',type:'look'},{id:'lever',label:'출발 레버',type:'door',done:F('given')}]
+};
+const meta=(c,id)=>SPOTS[c].find(m=>m.id===id);
+const locksOf=c=>SPOTS[c].filter(m=>m.type==='lock');
+const carDone=c=>locksOf(c).every(m=>m.done());
+function spotState(c,m){if(m.type==='lock')return m.done()?'solved':'lock';if(m.type==='door'&&m.done())return 'solved';return S.seen[c+':'+m.id]?'seen':''}
+function openSpot(c,id){
+  const m=meta(c,id);if(!m)return;A.init();const k=c+':'+id;S.seen[k]=1;
+  if(m.type==='clue'&&!S.notes.includes(k)){S.notes.push(k);setTimeout(()=>toast('단서 수첩에 기록 · '+m.label),50)}
+  const f=ON[c]&&ON[c][id];if(f)f();
+  if(c===S.car&&$('#game').classList.contains('on'))renderSpots();renderSide();
+}
 function render(){
+  const c=CARS[S.car];
+  $('#eyebrow').textContent=c.n+' · '+c.kind;$('#ctitle').textContent=c.sub;$('#goal').textContent=c.goal;
+  $('#train').innerHTML=ORDER.map((k,i)=>{const C=CARS[k],open=k>=S.reached;return (i?'<span class="coupler" aria-hidden="true"></span>':'')+'<button type="button" class="car'+(k===0?' engine':'')+(k===S.car?' current':'')+(open?' lit':'')+(open&&carDone(k)?' done':'')+'" data-car="'+k+'"'+(open?'':' disabled')+' aria-current="'+(k===S.car)+'"><b>'+C.n+'</b><span>'+(open?C.kind:'잠김')+'</span></button>'}).join('');
   $('#scene').innerHTML=SCENES[S.car]();
-  $('#goal').textContent=CARS[S.car].goal;
-  $('#stations').innerHTML=ORDER.map(c=>'<li class="'+(c===S.car?'now':ORDER.indexOf(c)<ORDER.indexOf(S.car)?'done':'')+'"><b></b>'+CARS[c].n+'</li>').join('');
+  renderSpots();renderSide();
+}
+function renderSpots(){
+  const L=locksOf(S.car),lc=$('#lockcount');
+  lc.innerHTML='퍼즐 '+L.map(m=>'<i class="'+(m.done()?'on':'')+'"></i>').join('');
+  lc.setAttribute('aria-label','이 칸의 퍼즐 '+L.filter(m=>m.done()).length+' / '+L.length+'개 풀림');
+  $('#spots').innerHTML=SPOTS[S.car].map(m=>'<button type="button" class="chip '+(m.type==='lock'?'puz ':'')+spotState(S.car,m)+'" data-spot="'+m.id+'"><span class="k" aria-hidden="true"></span>'+m.label+'</button>').join('');
+  $('#next').innerHTML=(carDone(S.car)&&S.car!==0)?'<div class="nextbar"><span>이 칸의 퍼즐을 모두 풀었다. 앞 칸으로 가는 문이 열려 있다.</span><button class="btn" type="button" data-go="'+(S.car-1)+'">'+CARS[S.car-1].n+'(으)로 이동</button></div>':'';
 }
 async function enterCar(c){
-  S.car=c;render();closeModal();
+  S.car=c;S.reached=Math.min(S.reached,c);closeModal();render();
+  try{$('#game').scrollTo({top:0,behavior:REDUCED?'auto':'smooth'})}catch(e){}
   const k=$('#card');k.firstElementChild.textContent=CARS[c].n;k.lastElementChild.textContent=CARS[c].sub;k.classList.add('show');
   say({4:'객실 안의 모든 것이 멈춰 있다. 눈에 띄는 것을 눌러 살펴보자.',3:'식당칸이다. 식탁 위에 누군가의 흔적이 남아 있다.',2:'조명이 꺼진 객실. 창밖으로 별이 또렷하게 보인다.',1:'승무원이 쓰는 칸이다. 기관실로 이어지는 철문이 보인다.',0:'기관실. 기관사가 창밖을 바라본 채 멈춰 있다.'}[c]);
   setTimeout(()=>k.classList.remove('show'),REDUCED?900:2200);
@@ -476,34 +530,34 @@ async function enterCar(c){
     addItem('case');
   }
 }
-function startGame(){FX.mode='off';cx.clearRect(0,0,W,H);S.started=true;show('game');drawInv();enterCar(S.car)}
+function startGame(){FX.mode='off';cx.clearRect(0,0,W,H);S.started=true;show('game');enterCar(S.car)}
 const locked=()=>{A.bad();say('문이 움직이지 않는다. 이 객실에서 아직 풀지 못한 것이 남아 있다.')};
 
 const ON={
  4:{
   window(){say('창밖의 빗방울이 공중에 멈춰 있다. 떨어지지도, 흐르지도 않는다.')},
-  passenger(){openModal({k:'단서',title:'멈춘 승객',html:'<p>박수를 치던 승객. 두 손이 맞닿기 직전에 그대로 굳어 있다. 숨소리도 들리지 않는다.</p><p>손목시계의 바늘은 <b>11시 59분</b>에 멈춰 있다. 초침도 움직이지 않는다.</p>'});addClue('멈춘 승객의 손목시계','모든 시계가 11시 59분에 멈춰 있다.')},
-  news(){openModal({k:'단서',title:'좌석 위의 신문',html:'<div class="news"><p class="dl">2026년 12월 31일 목요일</p><h4>40년의 운행, 오늘 마지막 열차를 달리다</h4><p><b>한시원 기관사, 오늘 밤 마지막 운행</b></p><p>지난 40년간 수많은 승객의 여정을 함께한 한시원 기관사가 오늘 마지막 운행을 마친다. 한 기관사는 <mark>1986년 처음 열차 운행을 시작</mark>했으며, 2026년 12월 31일을 끝으로 은퇴할 예정이다.</p><p>철도 관계자는 “오랜 세월 승객들의 안전을 위해 헌신한 기관사에게 감사드린다”고 전했다.</p></div><p class="pencil">“모든 여정에는 시작과 끝이 있다.”</p>'});addClue('신문 기사','한시원 기관사는 1986년 처음 열차 운행을 시작했고, 2026년 12월 31일에 은퇴한다. 연필 글씨: “모든 여정에는 시작과 끝이 있다.”')},
+  passenger(){openModal({k:'단서',title:'멈춘 승객',html:'<p>박수를 치던 승객. 두 손이 맞닿기 직전에 그대로 굳어 있다. 숨소리도 들리지 않는다.</p><p>손목시계의 바늘은 <b>11시 59분</b>에 멈춰 있다. 초침도 움직이지 않는다.</p>'});},
+  news(){openModal({k:'단서',title:'좌석 위의 신문',html:'<div class="news"><p class="dl">2026년 12월 31일 목요일</p><h4>40년의 운행, 오늘 마지막 열차를 달리다</h4><p><b>한시원 기관사, 오늘 밤 마지막 운행</b></p><p>1963년 개통한 새벽선의 야간열차를 40년 동안 몰아 온 한시원 기관사가 오늘 마지막 운행을 마친다. 1985년 견습 기관사로 철도에 들어온 그는 이듬해 처음으로 직접 열차를 몰았고, 2026년 12월 31일을 끝으로 은퇴한다.</p><p>철도 관계자는 “오랜 세월 승객들의 안전을 위해 헌신한 기관사에게 감사드린다”고 전했다.</p></div><p class="pencil">“모든 여정에는 시작과 끝이 있다.”</p>'});},
   clock(){
     if(S.flags.clock)return say('벽시계는 11시 59분을 가리킨 채 멈춰 있다. 아래 칸은 이미 열려 있다.');
-    puzzle({title:'벽시계',desc:'바늘이 빠져 있는 벽시계. 추 아래 작은 칸이 잠겨 있고, 숫자판 네 개가 달려 있다. 시각을 맞추면 열릴 것 같다.',hint:'마지막 순간을 기억하라.',n:4,sep:{at:2,ch:':'},answer:'1159',btn:'시각 맞추기',wrong:'시계는 반응하지 않는다. 그 시각이 아니다.',ok(){S.flags.clock=1;render();addItem('diary1');say('벽시계 아래 칸이 열리고, 낡은 일기장이 나왔다.');showItem('diary1',1)}});
+    puzzle({title:'벽시계',desc:'바늘이 빠져 있는 벽시계. 추 아래 작은 칸이 잠겨 있고, 숫자판 네 개가 달려 있다.',hint:'마지막 순간을 기억하라.',n:4,answer:'1159',wrong:'칸은 꿈쩍도 하지 않는다.',ok(){S.flags.clock=1;render();addItem('diary1');say('벽시계 아래 칸이 열리고, 낡은 일기장이 나왔다.');showItem('diary1',1)}});
   },
   suitcase(){
     if(S.flags.case4)return say('여행가방은 열려 있다. 안에는 더 이상 아무것도 없다.');
-    puzzle({title:'여행가방',desc:'낡은 가죽 여행가방. 네 자리 자물쇠로 잠겨 있다. 손잡이에 “한시원”이라는 이름표가 달려 있다.',hint:'신문에 표시된, 기차를 처음 운행한 해.',n:4,answer:'1986',ok(){S.flags.case4=1;render();addItem('spring');say('가방 안쪽 주머니에서 금빛 태엽이 나왔다. 3호차로 가는 문에서 딸깍 소리가 난다.');showItem('spring',1)}});
+    puzzle({title:'여행가방',desc:'낡은 가죽 여행가방. 네 자리 자물쇠로 잠겨 있다. 손잡이에 “한시원”이라는 이름표가 달려 있다.',hint:'그가 처음으로 직접 열차를 몬 해. 신문을 다시 읽어 보자.',n:4,answer:'1986',ok(){S.flags.case4=1;render();addItem('spring');say('가방 안쪽 주머니에서 금빛 태엽이 나왔다. 3호차로 가는 문에서 딸깍 소리가 난다.');showItem('spring',1)}});
   },
   door(){S.flags.clock&&S.flags.case4?enterCar(3):locked()}
  },
  3:{
-  menu(){openModal({k:'단서',title:'메뉴판',html:'<div class="menu"><div><span>커피</span><span>2,500원</span></div><div><span>조각 케이크</span><span>4,000원</span></div><div><span>홍차</span><span>3,000원</span></div></div>'});addClue('식당칸 메뉴판','커피 2,500원 · 조각 케이크 4,000원 · 홍차 3,000원')},
-  receipt(){openModal({k:'단서',title:'식탁 위의 영수증',html:'<div class="rcpt"><p style="text-align:center;margin:0 0 8px">새벽 식당칸<br>1985. 4.</p><div><span>커피</span><span>× 2</span></div><div><span>조각 케이크</span><span>× 1</span></div><p style="margin:10px 0 0;border-top:1px dashed #2a1c12;padding-top:6px">합계 ……</p></div><p>오래된 영수증이다. 합계 금액이 적힌 부분이 찢겨 나갔다. 두 사람이 마주 앉았던 자리 같다.</p>'});addClue('오래된 영수증','커피 2잔, 조각 케이크 1개. 합계 부분은 찢겨 있다.')},
+  menu(){openModal({k:'단서',title:'메뉴판',html:'<div class="menu"><div><span>커피</span><span>2,500원</span></div><div><span>조각 케이크</span><span>4,000원</span></div><div><span>홍차</span><span>3,000원</span></div></div>'});},
+  receipt(){openModal({k:'단서',title:'식탁 위의 영수증',html:'<div class="rcpt"><p style="text-align:center;margin:0 0 8px">새벽 식당칸<br>1985. 4.</p><div><span>커피</span><span>× 2</span></div><div><span>조각 케이크</span><span>× 1</span></div><p style="margin:10px 0 0;border-top:1px dashed #2a1c12;padding-top:6px">합계 ……</p></div><p>오래된 영수증이다. 끝부분이 찢겨 나갔다. 두 사람이 마주 앉았던 자리 같다.</p>'});},
   register(){
     if(S.flags.reg)return say('금전등록기 서랍은 열려 있다. 표시창에 9000이 떠 있다.');
-    puzzle({title:'금전등록기',desc:'오래된 금전등록기. 합계 금액을 넣으면 서랍이 열리는 구조다.',hint:'메뉴판: 커피 2,500원, 케이크 4,000원. 영수증: 커피 2, 조각 케이크 1.',n:4,answer:'9000',btn:'계산하기',wrong:'땡. 금액이 맞지 않는다.',ok(){S.flags.reg=1;render();addItem('photo');say('서랍이 열리고, 지폐 대신 사진 한 장이 들어 있다. 뒷면에 글씨가 보인다.');showItem('photo',1)}});
+    puzzle({title:'금전등록기',desc:'오래된 금전등록기. 네 자리 숫자를 누르는 자판이 달려 있다.',hint:'그날 두 사람이 먹은 것의 값. 메뉴판과 영수증을 함께 보자.',n:4,answer:'9000',btn:'계산하기',wrong:'땡. 금액이 맞지 않는다.',ok(){S.flags.reg=1;render();addItem('photo');say('서랍이 열리고, 지폐 대신 사진 한 장이 들어 있다. 뒷면에 글씨가 보인다.');showItem('photo',1)}});
   },
   musicbox(){
     if(S.flags.mbox)return say('오르골은 열려 있다. 멜로디는 한 음에서 멈춘 채 울리지 않는다.');
-    const b=openModal({k:'퍼즐',title:'추억의 오르골',html:'<p>뚜껑이 잠긴 오르골. 색이 다른 버튼 네 개가 달려 있다. 정해진 순서대로 눌러야 열릴 것 같다.</p><div class="hint"><b>힌트</b>'+(has('photo')?'사진 뒷면: “노란 우산, 파란 코트, 빨간 목도리, 초록색 기차표. 그날의 널 기억해.”':'순서를 알려 줄 단서가 아직 없다. 이 객실을 더 살펴보자.')+'</div><div class="mbox"></div><div class="dots"><i></i><i></i><i></i><i></i></div><p class="msg"></p>'});
+    const b=openModal({k:'퍼즐',title:'추억의 오르골',html:'<p>뚜껑이 잠긴 오르골. 색이 다른 버튼 네 개가 달려 있다. 정해진 순서대로 눌러야 열릴 것 같다.</p><div class="hint"><b>힌트</b>'+(has('photo')?'사진 뒷면에 적힌 물건의 순서, 그리고 앞면에서 그 물건들의 색.':'순서를 알려 줄 단서가 아직 없다. 이 객실을 더 살펴보자.')+'</div><div class="mbox"></div><div class="dots"><i></i><i></i><i></i><i></i></div><p class="msg"></p>'});
     const seq=[],ans='ybrg',box=b.querySelector('.mbox'),dots=b.querySelectorAll('.dots i'),msg=b.querySelector('.msg');
     [['r','#c62f2b','빨강',392],['g','#3f9a56','초록',523],['y','#f2c230','노랑',330],['b','#2d5fa8','파랑',440]].forEach(q=>{const bt=el('button');bt.type='button';bt.style.background=q[1];bt.setAttribute('aria-label',q[2]+' 버튼');bt.id='mb-'+q[0];
       bt.onclick=()=>{A.note(q[3]);seq.push(q[0]);dots.forEach((d,i)=>d.classList.toggle('on',i<seq.length));msg.textContent='';
@@ -514,40 +568,44 @@ const ON={
   door(){S.flags.reg&&S.flags.mbox?enterCar(2):locked()}
  },
  2:{
-  calendar(){openModal({k:'단서',title:'벽 달력',html:'<p>3월에서 넘어가지 않은 달력. <b>14일</b>에 붉은 동그라미가 여러 번 덧그려져 있다. 종이가 닳을 만큼 오래 만진 흔적이 있다.</p>'});addClue('3월 달력','3월 14일에 붉은 동그라미가 그려져 있다.')},
+  calendar(){const mk={2:'점검',14:'U',21:'교대',27:'정비'};let g='<div class="mcal"><div class="h">3월</div>'+'일월화수목금토'.split('').map(d=>'<span class="w">'+d+'</span>').join('')+'<span></span>'.repeat(6);
+    for(let d=1;d<=31;d++){const m=mk[d];g+='<span class="'+(m?'o':'')+'">'+d+(m==='U'?'<svg viewBox="0 0 40 40" width="18" height="18" aria-label="노란 우산 그림">'+umb('#f2c230')+'</svg>':m?'<small>'+m+'</small>':'')+'</span>'}
+    openModal({k:'단서',title:'벽 달력',html:g+'</div><p style="margin-top:12px">3월에서 넘어가지 않은 달력. 날짜 몇 개에 붉은 동그라미가 쳐 있다. 한 칸에만 글씨 대신 작은 그림이 그려져 있다.</p>'});},
   trunk(){
     if(S.flags.trunk)return say('트렁크는 열려 있다. 일기장이 있던 자리만 남아 있다.');
-    puzzle({title:'낡은 트렁크',desc:'좌석 아래 밀어 넣어 둔 트렁크. 네 자리 자물쇠가 달려 있다. 오랫동안 아무도 열지 않은 것 같다.',hint:'잊을 수 없는 날짜. 달력에 표시된 날을 네 자리로.',n:4,answer:'0314',ok(){S.flags.trunk=1;render();addItem('diary3');say('트렁크 안에서 기관사의 일기가 나왔다.');showItem('diary3',1)}});
+    puzzle({title:'낡은 트렁크',desc:'좌석 아래 밀어 넣어 둔 트렁크. 네 자리 자물쇠가 달려 있다. 오랫동안 아무도 열지 않은 것 같다.',hint:'잊을 수 없는 날. 그녀를 떠올리게 하는 것이 그려진 날을 월 두 자리, 일 두 자리로.',n:4,answer:'0314',ok(){S.flags.trunk=1;render();addItem('diary3');say('트렁크 안에서 기관사의 일기가 나왔다.');showItem('diary3',1)}});
   },
-  book(){openModal({k:'단서',title:'그림책',wide:1,html:'<div class="book"><div><p><b>별 세는 밤</b></p><p>창밖의 별자리를 <b>왼쪽부터 순서대로</b> 세어 보세요. 별이 몇 개씩 모여 있나요?</p></div><div><p style="font-size:13px;color:#7a5530">마지막 장, 아이의 낙서</p><p class="kid">“시간이 흘러야 별도 움직이고, 새로운 별도 볼 수 있대요!”</p></div></div>'});addClue('그림책','“창밖의 별자리를 왼쪽부터 순서대로 세어 보세요.” 마지막 장의 낙서: “시간이 흘러야 별도 움직이고, 새로운 별도 볼 수 있대요!”')},
+  book(){openModal({k:'단서',title:'그림책',wide:1,html:'<div class="book"><div><p><b>별 세는 밤</b></p><p>창밖의 별자리마다 별이 몇 개씩 모여 있는지 세어 보세요.</p></div><div><p style="font-size:13px;color:#7a5530">마지막 장, 아이의 낙서</p><p class="kid">“시간이 흘러야 별도 움직이고, 새로운 별도 볼 수 있대요!”</p></div></div>'});},
   stars(){openModal({k:'살펴보기',title:'창밖의 별자리',wide:1,html:'<div class="starview"><svg viewBox="0 0 780 260">'+[0,1,2].map(i=>'<g transform="translate('+(i*260+5)+' 0)">'+starWin(i)+'</g>').join('')+'</svg></div><p style="margin-top:12px">세 개의 창에 별자리가 하나씩 걸려 있다. 별들도 제자리에 멈춰 있다.</p>'})},
   starbox(){
     if(S.flags.sbox)return say('놋쇠 상자는 열려 있다.');
-    puzzle({title:'별이 새겨진 놋쇠 상자',desc:'뚜껑에 별 세 개가 새겨진 작은 상자. 세 자리 자물쇠로 잠겨 있다.',hint:'그림책: 창밖의 별자리를 왼쪽부터 순서대로 세어라.',n:3,answer:'463',ok(){S.flags.sbox=1;render();addItem('hand');say('상자 안에 시계바늘이 가지런히 놓여 있다.');showItem('hand',1)}});
+    puzzle({title:'별이 새겨진 놋쇠 상자',desc:'뚜껑에 별 세 개가 새겨진 작은 상자. 세 자리 자물쇠로 잠겨 있다.',hint:'그림책의 말대로 별을 세어, 왼쪽 창부터 읽어 보자.',n:3,answer:'463',ok(){S.flags.sbox=1;render();addItem('hand');say('상자 안에 시계바늘이 가지런히 놓여 있다.');showItem('hand',1)}});
   },
   door(){S.flags.trunk&&S.flags.sbox?enterCar(1):locked()}
  },
  1:{
-  notice(){openModal({k:'단서',title:'운행 안내문',html:'<div class="news"><h4>운행 안내</h4><p>한시원 기관사의 <b>마지막 운행일</b>은 <mark>2026년 12월 31일</mark>입니다.</p><p>종착역: 새벽역 · 도착 예정 24:00</p><p>40년간의 운행 기록은 기록 보관함에 보관되어 있습니다. 보관함 암호는 마지막 운행일입니다.</p></div>'});addClue('운행 안내문','마지막 운행일은 2026년 12월 31일. 기록 보관함 암호는 마지막 운행일.')},
-  plaque(){openModal({k:'단서',title:'문 옆 명판',html:'<p><b>기관실</b> · 관계자 외 출입 금지</p><p>문에는 날짜를 맞추는 달력식 잠금장치가 달려 있다. 지금은 12월 31일에 멈춰 있다.</p><p class="pencil">“끝의 다음 날, 새로운 시작의 날에 문이 열린다.”</p>'});addClue('기관실 문 명판','“끝의 다음 날, 새로운 시작의 날에 문이 열린다.”')},
+  notice(){openModal({k:'단서',title:'운행 안내문',html:'<div class="news"><h4>운행 안내</h4><p>오늘 밤 이 열차는 한시원 기관사의 <b>마지막 운행</b>입니다.</p><p>종착역: 새벽역 · 도착 예정 24:00</p><p>40년간의 운행 기록은 기록 보관함에 보관되어 있습니다.</p></div>'});},
+  plaque(){openModal({k:'단서',title:'문 옆 명판',html:'<p><b>기관실</b> · 관계자 외 출입 금지</p><p>문에는 날짜를 맞추는 달력식 잠금장치가 달려 있다.</p><p class="pencil">“여정이 끝난 다음 장에서 이 문이 열린다.”</p>'});},
   cabinet(){
     if(S.flags.cab)return say('기록 보관함은 비어 있다.');
-    puzzle({title:'기록 보관함',desc:'운행 기록이 들어 있는 철제 보관함. 네 자리 암호로 잠겨 있다.',hint:'운행 안내문에서 마지막 운행일을 알 수 있다.',n:4,answer:'1231',ok(){S.flags.cab=1;render();addItem('diary4');addItem('glass');say('보관함에서 마지막 일기와 유리조각이 나왔다.');showItem('diary4',1)}});
+    puzzle({title:'기록 보관함',desc:'운행 기록이 들어 있는 철제 보관함. 네 자리 자물쇠 옆에 ‘마지막 장’이라는 글귀가 새겨져 있다.',hint:'마지막 운행은 언제였을까. 이 열차의 다른 칸에 그 날짜가 적혀 있었다.',n:4,answer:'1231',ok(){S.flags.cab=1;render();addItem('diary4');addItem('glass');say('보관함에서 마지막 일기와 유리조각이 나왔다.');showItem('diary4',1)}});
   },
   locker(){
     if(S.flags.letter)return say('물품 보관함에는 주인을 기다리는 물건들만 남아 있다.');
     const shapes={umb:c=>umb(c),star:c=>'<path transform="translate(20 20) scale(1.4)" d="M0 -11Q1.5 -1.5 11 0Q1.5 1.5 0 11Q-1.5 1.5 -11 0Q-1.5 -1.5 0 -11Z" fill="'+c+'"/>',moon:c=>'<path d="M26 6A15 15 0 1 0 34 30A12 12 0 1 1 26 6Z" fill="'+c+'"/>',heart:c=>'<path d="M20 34L6 19Q2 8 12 7Q18 7 20 13Q22 7 28 7Q38 8 34 19Z" fill="'+c+'"/>',train:c=>'<rect x="6" y="12" width="28" height="16" rx="3" fill="'+c+'"/><circle cx="12" cy="31" r="4" fill="#2a1c12"/><circle cx="28" cy="31" r="4" fill="#2a1c12"/><rect x="10" y="15" width="8" height="6" fill="#fff"/>',flower:c=>[0,72,144,216,288].map(a=>'<circle cx="20" cy="11" r="6" fill="'+c+'" transform="rotate('+a+' 20 20)"/>').join('')+'<circle cx="20" cy="20" r="4" fill="#f2c230"/>'};
-    const L=[['umb','#c62f2b','빨간 우산이 그려진 엽서. 받는 사람이 다르다.'],['star','#f2c230','별이 그려진 봉투. 아이 글씨다.'],['train','#6b1d1f','기차 스티커가 붙은 소포 꼬리표.'],['flower','#d77aa0','꽃이 그려진 축하 카드.'],['moon','#f2c230','노란 달이 그려진 봉투. 우산은 아니다.'],['umb','#2d5fa8','파란 우산이 그려진 편지. 수신인은 “분실물 센터”.'],['heart','#c62f2b','하트가 그려진 쪽지.'],['umb','#f2c230',''],['flower','#f2c230','노란 꽃이 그려진 엽서.'],['star','#2d5fa8','파란 별 도장이 찍힌 봉투.'],['train','#1e5557','초록 기차가 그려진 승차권 봉투.'],['moon','#cfd8e8','은빛 달이 그려진 초대장.']];
-    const b=openModal({k:'퍼즐',title:'물품 보관함',wide:1,html:'<p>주인을 찾지 못한 편지와 엽서가 잔뜩 쌓여 있다. 이 가운데 기관사 앞으로 온 것이 있을지도 모른다.</p><div class="hint"><b>힌트</b>일기 속 그녀는 늘 무엇을 쓰고 있었나.</div><div class="lost" style="margin-top:14px"></div><p class="msg"></p>'});
+    const L=[['umb','#c62f2b','빨간 우산이 그려진 엽서.','새벽역 역무실'],['star','#f2c230','별이 그려진 봉투. 아이 글씨다.','기관사 할아버지께'],['train','#6b1d1f','기차 스티커가 붙은 소포 꼬리표.','4호차 7번 좌석 손님'],['umb','#f2c230','노란 우산이 그려진 엽서.','한시운'],['flower','#d77aa0','꽃이 그려진 축하 카드.','김도윤 차장'],['umb','#2d5fa8','파란 우산이 그려진 편지.','분실물 센터'],['heart','#c62f2b','하트가 그려진 쪽지.','(비어 있음)'],['umb','#f2c230','노란 우산이 그려진 편지. 단단히 봉인되어 있다.','한시원',1],['umb','#f2c230','노란 우산이 그려진 봉투.','새벽역 역장'],['star','#2d5fa8','파란 별 도장이 찍힌 봉투.','윤정'],['train','#1e5557','초록 기차가 그려진 승차권 봉투.','한시원 기관사 귀하 (반송)'],['moon','#cfd8e8','은빛 달이 그려진 초대장.','기관실 승무원 일동']];
+    const b=openModal({k:'퍼즐',title:'물품 보관함',wide:1,html:'<p>주인을 찾지 못한 편지와 엽서가 잔뜩 쌓여 있다. 이 가운데 기관사 앞으로 온 것이 있을지도 모른다.</p><div class="hint"><b>힌트</b>일기 속 그녀는 늘 무엇을 쓰고 있었나. 그리고 받는 사람의 이름을 정확히.</div><div class="lost" style="margin-top:14px"></div><p class="msg"></p>'});
     const g=b.querySelector('.lost'),msg=b.querySelector('.msg');
     L.forEach((q,i)=>{const bt=el('button','', '<svg viewBox="0 0 80 60"><rect x="2" y="2" width="76" height="56" fill="#fffdf6" stroke="#8d7a5c"/><path d="M2 2L40 30L78 2" fill="none" stroke="#c9bfa6"/><g transform="translate(44 22) scale(.8)">'+shapes[q[0]](q[1])+'</g><path d="M8 40h26M8 48h18" stroke="#8d7a5c" stroke-width="2"/></svg>');bt.type='button';bt.id='lost'+i;bt.setAttribute('aria-label','우편물 '+(i+1));
-      bt.onclick=()=>{if(q[0]==='umb'&&q[1]==='#f2c230'){A.ok();S.flags.letter=1;closeModal();render();addItem('letter');say('노란 우산이 그려진 편지. 겉봉에 “한시원에게”라고 적혀 있다.');showItem('letter',1)}else{A.tick();msg.textContent=q[2]}};g.append(bt)});
+      bt.onclick=()=>{A.tick();g.querySelectorAll('button').forEach(x=>x.classList.toggle('sel',x===bt));
+        msg.innerHTML=q[2]+'<br>받는 사람: <b>'+q[3]+'</b><br><button class="btn" type="button" id="take" style="margin-top:8px">이 편지를 챙긴다</button>';
+        msg.querySelector('#take').onclick=()=>{if(q[4]){A.ok();S.flags.letter=1;closeModal();render();addItem('letter');say('노란 우산이 그려진 편지. 겉봉에 “한시원에게”라고 적혀 있다.');showItem('letter',1)}else{A.bad();msg.textContent='이 편지는 아닌 것 같다. 다시 찾아보자.'}}};g.append(bt)});
   },
   door(){
     if(S.flags.cabdoor)return enterCar(0);
     if(!(S.flags.cab&&S.flags.letter)){A.bad();return say('기관실로 가기 전에, 이 객실에서 찾아야 할 것이 아직 남아 있다.')}
     let y=2026,m=12;
-    const b=openModal({k:'퍼즐',title:'기관사 연결문',html:'<p>철문에 달력식 잠금장치가 달려 있다. 날짜 하나를 고르면 문이 반응한다.</p><div class="hint"><b>힌트</b>끝의 다음 날, 새로운 시작의 날.</div><div class="cal" style="margin-top:14px"><header><button type="button" id="calp" aria-label="이전 달">‹</button><span id="calt"></span><button type="button" id="caln" aria-label="다음 달">›</button></header><div class="g"></div></div><p class="msg"></p>'});
+    const b=openModal({k:'퍼즐',title:'기관사 연결문',html:'<p>철문에 달력식 잠금장치가 달려 있다. 날짜 하나를 고르면 문이 반응한다.</p><div class="hint"><b>힌트</b>4호차 신문 귀퉁이의 연필 글씨를 떠올려 보자. 끝이 있으면, 그다음이 있다.</div><div class="cal" style="margin-top:14px"><header><button type="button" id="calp" aria-label="이전 달">‹</button><span id="calt"></span><button type="button" id="caln" aria-label="다음 달">›</button></header><div class="g"></div></div><p class="msg"></p>'});
     const g=b.querySelector('.g'),msg=b.querySelector('.msg');
     const draw=()=>{b.querySelector('#calt').textContent=y+'년 '+m+'월';g.innerHTML='';'일월화수목금토'.split('').forEach(d=>g.append(el('span','',d)));
       const first=new Date(y,m-1,1).getDay(),days=new Date(y,m,0).getDate();for(let i=0;i<first;i++)g.append(el('span','',''));
@@ -571,7 +629,7 @@ const ON={
         if(id==='hand'&&!(placed.spring&&placed.gear)){A.bad();return msg.textContent='바늘을 걸 축이 아직 돌지 않는다. 안쪽 부품부터 넣어야 한다.'}
         if(id==='glass'&&!placed.hand){A.bad();return msg.textContent='유리는 맨 마지막에 덮어야 한다.'}
         placed[id]=1;bt.disabled=true;A.tick();A.note(523+Object.keys(placed).length*110);msg.textContent=names[id]+'을(를) 끼웠다.';draw();
-        if(Object.keys(placed).length===4){S.flags.fixed=1;A.ok();setTimeout(()=>{closeModal();render();drawInv();openModal({k:'회중시계',title:'시계가 제 모습을 되찾았다',html:'<div style="width:200px;margin:0 auto 12px">'+watchSVG()+'</div><p>네 개의 부품이 모두 제자리를 찾았다. 그런데 초침은 아직 움직이지 않는다.</p><p style="text-align:center;font-weight:700;color:var(--maroon)">봉인된 편지를 기관사에게 전달하십시오.</p>'});say('봉인된 편지를 기관사에게 전달하십시오.')},900)}
+        if(Object.keys(placed).length===4){S.flags.fixed=1;A.ok();setTimeout(()=>{closeModal();render();openModal({k:'회중시계',title:'시계가 제 모습을 되찾았다',html:'<div style="width:200px;margin:0 auto 12px">'+watchSVG()+'</div><p>네 개의 부품이 모두 제자리를 찾았다. 그런데 초침은 아직 움직이지 않는다.</p><p style="text-align:center;font-weight:700;color:var(--maroon)">봉인된 편지를 기관사에게 전달하십시오.</p>'});say('봉인된 편지를 기관사에게 전달하십시오.')},900)}
       };tray.append(bt)});
   },
   engineer(){
@@ -594,10 +652,23 @@ const ON={
   }
  }
 };
-$('#scene').addEventListener('click',e=>{const h=e.target.closest('.hot');if(!h)return;A.init();const f=ON[S.car][h.dataset.id];if(f)f()});
-$('#bNotes').onclick=()=>{openModal({k:'단서 수첩',title:'지금까지 찾은 단서',html:S.clues.length?S.clues.map(c=>'<p><b>'+c.t+'</b><br>'+c.d+'</p>').join(''):'<p>아직 기록한 단서가 없다. 객실 안의 물건을 눌러 살펴보자.</p>'})};
-$('#bMarks').onclick=e=>{const on=$('#scene').classList.toggle('marks');e.currentTarget.setAttribute('aria-pressed',on)};
+$('#scene').addEventListener('click',e=>{const h=e.target.closest('.hot');if(!h)return;hideTag();openSpot(S.car,h.dataset.id)});
+$('#game').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const d=b.dataset;
+  if(d.car!==undefined){const k=+d.car;if(k>=S.reached&&k!==S.car){A.init();enterCar(k)}return}
+  if(d.go!==undefined){A.init();enterCar(+d.go);return}
+  if(d.spot)openSpot(S.car,d.spot);
+});
+const tagEl=$('#tag'),wrapEl=$('#sceneWrap');
+function showTag(h){const m=meta(S.car,h.dataset.id);if(!m)return;const r=h.getBoundingClientRect(),p=wrapEl.getBoundingClientRect();tagEl.textContent=m.label;
+  const y=r.top-p.top-8,below=y<34;tagEl.classList.toggle('below',below);tagEl.style.left=clamp(r.left+r.width/2-p.left,64,p.width-64)+'px';tagEl.style.top=(below?Math.min(r.bottom-p.top+8,p.height-34):y)+'px';tagEl.classList.add('show')}
+function hideTag(){tagEl.classList.remove('show')}
+$('#scene').addEventListener('mouseover',e=>{const h=e.target.closest('.hot');h?showTag(h):hideTag()});
+$('#scene').addEventListener('mouseleave',hideTag);
+$('#scene').addEventListener('focusin',e=>{const h=e.target.closest('.hot');if(h)showTag(h)});
+$('#scene').addEventListener('focusout',hideTag);
 $('#bSound').onclick=e=>{A.init();A.setMute(!A.mute);e.currentTarget.setAttribute('aria-pressed',!A.mute);e.currentTarget.textContent=A.mute?'소리 꺼짐':'소리 켜짐'};
+$('#bReset').onclick=()=>{const b=openModal({k:'처음부터',title:'처음부터 다시 탈까요?',html:'<p>지금까지 푼 퍼즐과 모은 단서, 소지품이 모두 사라집니다.</p><div class="acts"><button class="btn" type="button" id="cfYes">다시 시작</button><button class="btn ghost" type="button" id="cfNo">취소</button></div>'});b.querySelector('#cfYes').onclick=resetAll;b.querySelector('#cfNo').onclick=closeModal};
+function resetAll(){endRun++;A.rumble(false);S=fresh();closeModal();$('#eend').classList.remove('on');$('#eline').innerHTML='';setMode('title');show('title')}
 
 /* ═════════ 엔딩 ═════════ */
 let endRun=0;
@@ -619,10 +690,10 @@ async function runEnding(){
   if(run!==endRun)return;ln.style.opacity=0;await sleep(900);ln.innerHTML='';ee.classList.add('on');
   setTimeout(()=>{if(run===endRun)A.rumble(false)},9000);
 }
-$('#again').onclick=()=>{endRun++;A.rumble(false);S={car:4,flags:{},inv:[],clues:[],started:false};$('#eend').classList.remove('on');$('#eline').innerHTML='';setMode('title');show('title')};
+$('#again').onclick=resetAll;
 
 /* ═════════ 시작 ═════════ */
-function start(d){if(d&&d.started&&d.flags){S=d;startGame();if(S.flags.woke&&!has('case'))addItem('case',1)}}
+function start(d){if(d&&d.started&&d.flags){S=Object.assign(fresh(),d);startGame()}}
 try{if(window.claude&&window.claude.hot){window.claude.hot.snapshot(()=>S);window.claude.hot.ready?window.claude.hot.ready(start):start(window.claude.hot.data||{})}}catch(e){}
 window.__game={S:()=>S,skip:()=>{skipFlag=true;if(cur)cur()}};
 })();

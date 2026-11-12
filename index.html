@@ -39,37 +39,57 @@
   <div id="kicker"></div>
   <div id="big"><h2 aria-label="시간이 멈춘 열차"></h2><div class="rule"></div><p>THE TRAIN WHERE TIME STOOD STILL</p></div>
   <div id="iwatch"></div>
-  <div id="cap"><small></small><p></p></div>
+  <div id="cap"><small></small><p></p><div class="nudge" id="nudge" aria-hidden="true"><span class="tri"></span><span class="txt">화면을 눌러 계속</span></div></div>
   <button id="skip" type="button">건너뛰기</button>
 </section>
 
 <section id="game" class="screen">
-  <div class="route-bar">
-    <ol class="stations" id="stations"></ol>
-    <div class="tools">
-      <span class="parts" id="parts">시계 부품 0/4</span>
-      <button class="chip" id="bNotes" type="button">단서 수첩</button>
-      <button class="chip" id="bMarks" type="button" aria-pressed="false">살펴볼 곳 표시</button>
-      <button class="chip" id="bSound" type="button" aria-pressed="true">소리 켜짐</button>
-    </div>
+ <div class="wrap">
+  <header class="top">
+   <div class="logo">
+    <svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="6" r="3.5" fill="none" stroke="#c79a4b" stroke-width="2"/><circle cx="20" cy="23" r="14" fill="none" stroke="#c79a4b" stroke-width="2.4"/><path d="M20 14v9l5 3" fill="none" stroke="#f0cf7e" stroke-width="2.2" stroke-linecap="round"/></svg>
+    <div><h1>시간이 멈춘 열차</h1><small>새벽역행 마지막 운행 · 웹 방탈출</small></div>
+   </div>
+   <div class="tools">
+    <div class="clock" role="img" aria-label="열차 시각 11시 59분, 멈춤"><span class="s">열차 시각</span><span class="t">11:59</span></div>
+    <button class="tbtn" id="bSound" type="button" aria-pressed="true">소리 켜짐</button>
+    <button class="tbtn" id="bReset" type="button">처음부터</button>
+   </div>
+  </header>
+
+  <nav class="train" id="train" aria-label="열차 칸 이동"></nav>
+
+  <div class="layout">
+   <div class="main">
+    <div class="cartitle"><div><div class="eyebrow" id="eyebrow"></div><h2 id="ctitle"></h2></div><div class="lockcount" id="lockcount"></div></div>
+    <div class="scene" id="sceneWrap"><div id="scene"></div><div id="tag" aria-hidden="true"></div><div id="card"><small></small><strong></strong></div></div>
+    <div class="narr"><p class="goal" id="goal"></p><p id="say" aria-live="polite"></p></div>
+    <div><p class="legend">살펴볼 수 있는 곳 · 노란 네모는 퍼즐, 초록은 푼 퍼즐, 회색은 이미 본 곳</p><div class="spots" id="spots"></div></div>
+    <div id="next"></div>
+   </div>
+   <aside class="side">
+    <section class="box" aria-labelledby="invH"><h3 id="invH">소지품 <small id="parts"></small></h3><div class="pslots" id="pslots"></div><div class="list" id="items"></div></section>
+    <section class="box" aria-labelledby="noteH"><h3 id="noteH">단서 수첩 <small>눌러서 다시 보기</small></h3><div class="list" id="notes"></div></section>
+    <section class="box" aria-labelledby="docH"><h3 id="docH">기관사의 일기 <small id="docCount"></small></h3><div class="list" id="docs"></div></section>
+   </aside>
   </div>
-  <div class="scenebox"><div id="scene"></div><div id="card"><small></small><strong></strong></div></div>
-  <div class="narr"><p class="goal" id="goal"></p><p id="say"></p></div>
-  <div class="inv"><span>소지품</span><div id="items"></div></div>
+ </div>
 </section>
 
 <section id="ending" class="screen">
   <div id="ewatch"></div>
+  <div class="estage">
   <p id="eline"></p>
   <div id="eend">
     <h2>시간은 다시 흐른다</h2>
     <p>과거에 머물고 싶은 마음과, 그럼에도 앞으로 흘러가야 하는 시간에 관한 이야기.</p>
     <button class="btn" id="again" type="button">처음부터 다시 타기</button>
   </div>
+  </div>
 </section>
 
 <div id="modal" role="dialog" aria-modal="true"></div>
-<div id="voice"><small></small><p></p><em>화면을 눌러 계속</em></div>
+<div id="voice"><small></small><p></p><div class="nudge" id="vnudge" aria-hidden="true"><span class="tri"></span><span class="txt">화면을 눌러 계속</span></div></div>
 <div id="toast" role="status"></div>
 
 <script src="script.js"></script>
