@@ -594,8 +594,8 @@ header.top{flex:none;display:flex;align-items:center;gap:16px;padding:0 0 10px;b
   opacity: 0;
   background:
     radial-gradient(
-      ellipse at 50% 77%,
-      rgba(255, 170, 82, .20),
+      ellipse at 50% 90%,
+      rgba(255, 170, 82, .26),
       transparent 67%
     ),
     linear-gradient(
@@ -612,6 +612,22 @@ header.top{flex:none;display:flex;align-items:center;gap:16px;padding:0 0 10px;b
 
 #ending[data-phase="running"]::before {
   opacity: 1;
+  /* 불빛이 다 켜진 뒤, 아주 미세하게 일렁인다 */
+  animation: endFlicker 4.2s linear 3s infinite;
+}
+
+@keyframes endFlicker {
+  0%, 100% { opacity: 1; }
+  7% { opacity: 0.95; }
+  11% { opacity: 0.99; }
+  16% { opacity: 0.93; }
+  22% { opacity: 1; }
+  48% { opacity: 0.975; }
+  53% { opacity: 0.92; }
+  57% { opacity: 0.985; }
+  63% { opacity: 0.95; }
+  70% { opacity: 1; }
+  88% { opacity: 0.965; }
 }
 
 /* 글과 시계를 조명보다 위에 배치 */
@@ -652,6 +668,7 @@ header.top{flex:none;display:flex;align-items:center;gap:16px;padding:0 0 10px;b
   #ending::before,
   #ending #ewatch {
     transition: none;
+    animation: none;
   }
 }
 
