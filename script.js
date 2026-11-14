@@ -100,6 +100,36 @@ const A={c:null,m:null,mute:false,clk:0,rum:null,
     try{g.gain.cancelScheduledValues(t);g.gain.setValueAtTime(g.gain.value,t);g.gain.linearRampToValueAtTime(.0001,t+fd)}catch(e){}
     setTimeout(()=>{try{g.disconnect()}catch(e){}},fd*1000+200);
   },
+  /* 인트로 음악: 탑승하는 순간부터 흐르는 느린 3박자 피아노 (8마디 반복) */
+  theme(){
+    if(!this.c)return;this.stopTheme(0);
+    const c=this.c,beat=.9,bar=beat*3,g=c.createGain(),now=c.currentTime;
+    g.gain.setValueAtTime(.0001,now);g.gain.linearRampToValueAtTime(.9,now+2);
+    const len=Math.floor(c.sampleRate*2.6),ib=c.createBuffer(2,len,c.sampleRate);
+    for(let ch=0;ch<2;ch++){const d=ib.getChannelData(ch);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2.4)}
+    const cv=c.createConvolver();cv.buffer=ib;const wet=c.createGain();wet.gain.value=.4;
+    g.connect(this.m);g.connect(cv);cv.connect(wet);wet.connect(this.m);this.tg=g;this.tw=wet;
+    const pn=(f,t,d,v)=>{[[1,1,1],[2,.28,.55],[3,.1,.3],[4,.04,.2]].forEach(p=>{const o=c.createOscillator(),gg=c.createGain(),e=d*p[2]+.05;o.type='sine';o.frequency.value=f*p[0];gg.gain.setValueAtTime(.0001,t);gg.gain.linearRampToValueAtTime(v*p[1],t+.012);gg.gain.exponentialRampToValueAtTime(.0001,t+e);o.connect(gg);gg.connect(g);o.start(t);o.stop(t+e+.05)})};
+    const Bm={b:123.47,ch:[246.94,293.66,369.99]},G={b:98,ch:[246.94,293.66,392]},D={b:146.83,ch:[220,293.66,369.99]},Am={b:110,ch:[220,277.18,329.63]};
+    const CH=[Bm,G,D,Am,Bm,G,D,Am];
+    const M=[[[739.99,0,2],[587.33,2,1]],[[493.88,0,3]],[[440,0,1],[587.33,1,1],[739.99,2,1]],[[659.25,0,3]],[[739.99,0,2],[987.77,2,1]],[[880,0,2],[783.99,2,1]],[[739.99,0,2],[587.33,2,1]],[[659.25,0,2],[554.37,2,1]]];
+    let next=now+.25;
+    const sched=()=>{
+      if(this.tg!==g)return;
+      for(let i=0;i<8;i++){
+        const k=CH[i],w=next+i*bar;
+        pn(k.b,w,3.2,.15);k.ch.forEach(f=>{pn(f,w+beat,2,.045);pn(f,w+beat*2,2,.04)});
+        M[i].forEach(n=>pn(n[0],w+n[1]*beat,n[2]*beat+1.6,.1));
+      }
+      next+=8*bar;this.tt=setTimeout(sched,Math.max(0,(next-c.currentTime-1.5)*1000));
+    };
+    sched();
+  },
+  stopTheme(f){
+    const g=this.tg,w=this.tw;if(!g||!this.c)return;this.tg=this.tw=null;clearTimeout(this.tt);const t=this.c.currentTime,fd=f==null?1:f;
+    try{g.gain.cancelScheduledValues(t);g.gain.setValueAtTime(Math.max(g.gain.value,.0001),t);g.gain.linearRampToValueAtTime(.0001,t+fd)}catch(e){}
+    setTimeout(()=>{try{g.disconnect();w.disconnect()}catch(e){}},fd*1000+200);
+  },
   ok(){[659,784,1047].forEach((f,i)=>this.tone(f,.9,.14,'triangle',i*.11))},
   bad(){this.tone(110,.28,.2,'sawtooth');this.tone(104,.28,.18,'sawtooth')},
   get(){[880,1175,1568].forEach((f,i)=>this.tone(f,1.1,.09,'sine',i*.07))},
@@ -144,11 +174,111 @@ const IC={
   photo:'<svg viewBox="0 0 40 40"><rect x="6" y="4" width="28" height="33" fill="#f4eedd" stroke="#6e4a1c"/><rect x="9" y="7" width="22" height="22" fill="#33415e"/><g transform="translate(11 8) scale(.45)">'+umb('#f2c230')+'</g></svg>',
   letter:'<svg viewBox="0 0 40 40"><rect x="4" y="9" width="32" height="23" fill="#f4eedd" stroke="#6e4a1c"/><path d="M4 9L20 22L36 9" fill="none" stroke="#6e4a1c"/><circle cx="20" cy="23" r="4" fill="#8b1c1c"/><g transform="translate(25 22) scale(.24)">'+umb('#f2c230')+'</g></svg>'
 };
-function photoArt(){return '<svg viewBox="0 0 240 240" role="img" aria-label="노란 우산을 든 윤정의 사진"><rect width="240" height="240" fill="#2c3a55"/><rect y="170" width="240" height="70" fill="#4a4338"/><rect x="0" y="166" width="240" height="6" fill="#d8c59c" opacity=".5"/>'
-  +'<rect x="150" y="40" width="74" height="126" fill="#5e1a1c"/><rect x="158" y="62" width="24" height="34" fill="#ffd98a" opacity=".85"/><rect x="190" y="62" width="24" height="34" fill="#ffd98a" opacity=".85"/><text x="187" y="56" text-anchor="middle" font-size="9" fill="#f0cf7e" font-family="Nanum Myeongjo,serif">새벽역</text>'
-  +'<path d="M72 118L62 206H128L118 118Z" fill="#2d5fa8"/><circle cx="95" cy="98" r="15" fill="#e9c9a8"/><path d="M79 96Q82 78 96 79Q112 80 111 100Q106 88 95 89Q84 88 79 96Z" fill="#2a1c12"/><path d="M78 114H112V126H104V150H96V126H78Z" fill="#c62f2b"/><rect x="118" y="150" width="20" height="11" rx="1" fill="#3f9a56" transform="rotate(-14 128 155)"/><line x1="110" y1="140" x2="124" y2="154" stroke="#2d5fa8" stroke-width="7" stroke-linecap="round"/>'
-  +'<g transform="translate(22 16) scale(3.1)">'+umb('#f2c230')+'</g><line x1="84" y1="78" x2="84" y2="142" stroke="#3b2115" stroke-width="3"/>'
-  +'<g stroke="#bcd0f0" stroke-width="1" opacity=".5"><line x1="20" y1="20" x2="16" y2="34"/><line x1="140" y1="10" x2="136" y2="24"/><line x1="200" y1="14" x2="196" y2="28"/><line x1="30" y1="120" x2="26" y2="134"/><line x1="142" y1="100" x2="138" y2="114"/><line x1="226" y1="110" x2="222" y2="124"/></g></svg>'}
+
+// 윤정의 사진 — 긴 생머리, 노란 우산을 어깨에 걸친 모습
+function photoArt(){
+  return '<svg viewBox="0 0 240 240" role="img" aria-label="노란 우산을 든 윤정의 사진">'
+  +'<defs>'
+  +'<linearGradient id="yjBg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2c3b58"/><stop offset="1" stop-color="#3b4763"/></linearGradient>'
+  +'<linearGradient id="yjSkin" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fdeee2"/><stop offset="1" stop-color="#f6d9c8"/></linearGradient>'
+  +'<linearGradient id="yjHair" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1a1211"/><stop offset=".5" stop-color="#2c201c"/><stop offset="1" stop-color="#171010"/></linearGradient>'
+  +'<linearGradient id="yjKnit" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a82d2"/><stop offset="1" stop-color="#2d5fa8"/></linearGradient>'
+  +'<radialGradient id="yjUmb" cx=".5" cy=".45" r=".6"><stop offset="0" stop-color="#ffe27a"/><stop offset=".7" stop-color="#f2c230"/><stop offset="1" stop-color="#d9a51e"/></radialGradient>'
+  +'<radialGradient id="yjGlow"><stop offset="0" stop-color="#ffe6a8" stop-opacity=".55"/><stop offset="1" stop-color="#ffe6a8" stop-opacity="0"/></radialGradient>'
+  +'</defs>'
+
+  // 배경: 비 오는 새벽역 승강장
+  +'<rect width="240" height="240" fill="url(#yjBg)"/>'
+  +'<rect y="188" width="240" height="52" fill="#4a453f"/>'
+  +'<rect y="185" width="240" height="4" fill="#d8c59c" opacity=".45"/>'
+  +'<rect x="6" y="150" width="50" height="20" rx="2" fill="#1d2a3f" stroke="#d8c59c" stroke-width="1" opacity=".9"/>'
+  +'<text x="31" y="164" text-anchor="middle" font-size="10" fill="#f0e2bd" font-family="Nanum Myeongjo,serif">새벽역</text>'
+  +'<rect x="29" y="170" width="4" height="18" fill="#1d2a3f"/>'
+  +'<rect x="213" y="96" width="3" height="92" fill="#1a2233"/>'
+  +'<circle cx="214" cy="92" r="26" fill="url(#yjGlow)"/>'
+  +'<circle cx="214" cy="92" r="5" fill="#fff0c2"/>'
+
+  // 어깨에 걸친 노란 우산 (머리 뒤로 둥글게 펼쳐진다)
+  +'<path d="M120 4Q150 2 174 20Q196 36 200 62Q204 88 190 112Q176 138 150 150Q120 162 90 150Q64 138 50 112Q36 88 40 62Q44 36 66 20Q90 2 120 4Z" fill="url(#yjUmb)"/>'
+  +'<g stroke="#b88a14" stroke-width="1" opacity=".55">'
+  +'<line x1="120" y1="82" x2="120" y2="4"/><line x1="120" y1="82" x2="174" y2="20"/><line x1="120" y1="82" x2="200" y2="62"/><line x1="120" y1="82" x2="190" y2="112"/>'
+  +'<line x1="120" y1="82" x2="66" y2="20"/><line x1="120" y1="82" x2="40" y2="62"/><line x1="120" y1="82" x2="50" y2="112"/>'
+  +'</g>'
+  +'<path d="M66 20Q90 2 120 4Q150 2 174 20" fill="none" stroke="#fff3b8" stroke-width="3" stroke-linecap="round" opacity=".5"/>'
+
+  // 뒤로 흘러내리는 긴 머리
+  +'<path d="M86 92Q84 48 120 47Q156 48 154 92L160 204Q120 212 80 204Z" fill="url(#yjHair)"/>'
+
+  // 상체: 파란 코트
+  +'<path d="M68 240Q68 160 100 143L120 150L140 143Q172 160 172 240Z" fill="url(#yjKnit)"/>'
+  +'<path d="M106 140L120 168L134 140L128 136H112Z" fill="#24487f"/>'
+  +'<path d="M104 142L120 174L136 142" fill="none" stroke="#1f4684" stroke-width="2.2" stroke-linejoin="round"/>'
+  +'<path d="M120 174V240" stroke="#1f4684" stroke-width="1.6"/>'
+  +'<circle cx="120" cy="212" r="2.6" fill="#c9b78f"/><circle cx="120" cy="230" r="2.6" fill="#c9b78f"/>'
+
+  // 우산대와 두 손
+  +'<line x1="150" y1="140" x2="131" y2="196" stroke="#4a2f1c" stroke-width="3.2" stroke-linecap="round"/>'
+  +'<path d="M131 196q-3 9 -10 6" fill="none" stroke="#4a2f1c" stroke-width="3.6" stroke-linecap="round"/>'
+  +'<path d="M70 214Q92 180 126 182L130 196Q104 198 84 232Z" fill="url(#yjKnit)" stroke="#1f4684" stroke-width="1"/>'
+  +'<path d="M170 214Q160 186 140 180L134 194Q148 200 156 232Z" fill="url(#yjKnit)" stroke="#1f4684" stroke-width="1"/>'
+  // 초록색 기차표
+  +'<g transform="rotate(-10 112 188)"><rect x="96" y="179" width="32" height="18" rx="2" fill="#3f9a56" stroke="#2a6e3c" stroke-width="1"/><path d="M100 184h14M100 188h20M100 192h10" stroke="#e6f4e4" stroke-width="1.1" opacity=".85"/></g>'
+  +'<ellipse cx="129" cy="187" rx="9" ry="6.5" fill="url(#yjSkin)" stroke="#e2bca9" stroke-width=".8"/>'
+  +'<ellipse cx="136" cy="181" rx="8.5" ry="6" fill="url(#yjSkin)" stroke="#e2bca9" stroke-width=".8"/>'
+
+  // 목
+  +'<path d="M111 108H129V140Q120 150 111 140Z" fill="#ecc9b8"/>'
+  +'<path d="M111 118Q120 128 129 118V112H111Z" fill="#d9ad9a" opacity=".55"/>'
+
+  // 빨간 목도리
+  +'<path d="M108 140L105 160L119 162L121 142Z" fill="#b3261e"/><path d="M106 158l-1 7M110 159l-1 7M114 160l-1 7M118 160v7" stroke="#b3261e" stroke-width="1.6" stroke-linecap="round"/>'
+  +'<path d="M98 125Q120 112 142 125Q145 136 139 143Q120 151 101 143Q95 136 98 125Z" fill="#c62f2b"/>'
+  +'<path d="M100 131Q120 120 140 131M101 138Q120 129 139 138" fill="none" stroke="#9c1f1b" stroke-width="1.2" opacity=".7"/>'
+  // 얼굴: 갸름한 턱선
+  +'<path d="M98 86Q98 62 120 62Q142 62 142 86Q142 104 132 114Q120 123 108 114Q98 104 98 86Z" fill="url(#yjSkin)"/>'
+
+  // 어깨 앞으로 내려오는 옆머리
+  +'<path d="M106 61Q92 74 90 100Q88 150 84 200Q92 213 100 204Q105 160 102 124Q99 102 100 90Q101 75 110 63Z" fill="url(#yjHair)"/>'
+  +'<path d="M134 61Q148 74 150 100Q152 150 156 200Q148 213 140 204Q135 160 138 124Q141 102 140 90Q139 75 130 63Z" fill="url(#yjHair)"/>'
+
+  // 가운데 가르마와 정수리
+  +'<path d="M94 92Q87 48 120 47Q153 48 146 92Q144 72 122 60Q120 59 118 60Q96 72 94 92Z" fill="url(#yjHair)"/>'
+  +'<path d="M120 48V59" stroke="#3a2c27" stroke-width=".8"/>'
+  // 머릿결 윤기
+  +'<g fill="none" stroke="#fff" stroke-linecap="round" opacity=".13">'
+  +'<path d="M100 62Q110 54 120 53" stroke-width="2.5"/><path d="M91 110Q90 150 86 190" stroke-width="2"/><path d="M149 110Q150 150 154 190" stroke-width="2"/>'
+  +'</g>'
+
+  // 눈썹
+  +'<path d="M104.5 85.5Q110 83.2 116 85" fill="none" stroke="#6b4f45" stroke-width="1.1" opacity=".85" stroke-linecap="round"/>'
+  +'<path d="M124 85Q130 83.2 135.5 85.5" fill="none" stroke="#6b4f45" stroke-width="1.1" opacity=".85" stroke-linecap="round"/>'
+
+  // 눈: 크고 또렷하게
+  +'<path d="M104 93Q110.5 87 117 93Q110.5 96.5 104 93Z" fill="#fff"/>'
+  +'<path d="M123 93Q129.5 87 136 93Q129.5 96.5 123 93Z" fill="#fff"/>'
+  +'<circle cx="110.5" cy="92.3" r="2.8" fill="#3a2620"/><circle cx="129.5" cy="92.3" r="2.8" fill="#3a2620"/>'
+  +'<circle cx="111.6" cy="91.1" r=".95" fill="#fff"/><circle cx="130.6" cy="91.1" r=".95" fill="#fff"/>'
+  +'<path d="M103.3 93.2Q110.5 86.2 117.6 92.6" fill="none" stroke="#2a1c18" stroke-width="1.2" stroke-linecap="round"/>'
+  +'<path d="M122.4 92.6Q129.5 86.2 136.7 93.2" fill="none" stroke="#2a1c18" stroke-width="1.2" stroke-linecap="round"/>'
+
+  // 코
+  +'<path d="M120.5 96Q122 102 120 104.5Q119 105 118 104.6" fill="none" stroke="#d9a996" stroke-width="1" stroke-linecap="round"/>'
+
+  // 입: 옅은 미소
+  +'<path d="M113.5 110Q117 108.2 120 109.2Q123 108.2 126.5 110Q120 114.5 113.5 110Z" fill="#d9818a"/>'
+  +'<path d="M113 110Q120 112.6 127 110" fill="none" stroke="#b9606b" stroke-width=".9" stroke-linecap="round"/>'
+
+  // 볼터치
+  +'<ellipse cx="106" cy="102" rx="6" ry="3.4" fill="#f5a9a6" opacity=".38"/>'
+  +'<ellipse cx="134" cy="102" rx="6" ry="3.4" fill="#f5a9a6" opacity=".38"/>'
+
+  // 사진 위 빗자국
+  +'<g stroke="#c7d9f5" stroke-width="1" opacity=".45">'
+  +'<line x1="22" y1="20" x2="18" y2="34"/><line x1="222" y1="24" x2="218" y2="39"/><line x1="16" y1="96" x2="12" y2="111"/>'
+  +'<line x1="228" y1="141" x2="224" y2="156"/><line x1="34" y1="126" x2="30" y2="141"/><line x1="204" y1="170" x2="200" y2="184"/>'
+  +'</g>'
+  +'</svg>';
+}
 
 /* ═════════ 캔버스 연출 ═════════ */
 const cv=$('#fx'),cx=cv.getContext('2d');let W=0,H=0;
@@ -197,7 +327,7 @@ function drawLand(t,o){
   const sky=c.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#04060d');sky.addColorStop(.55,o.dawn?'#1c2444':'#101830');sky.addColorStop(1,o.dawn?'#4a3a4e':'#1d2740');
   c.fillStyle=sky;c.fillRect(0,0,W,H);
   c.save();
-  if(FX.zoom!==1){const px=W*.46,py=H*.66;c.translate(px,py);c.scale(FX.zoom,FX.zoom);c.translate(-px,-py)}
+  if(FX.zoom!==1){const px=W*.46,py=H*(o.low||.66);c.translate(px,py);c.scale(FX.zoom,FX.zoom);c.translate(-px,-py)}
   if(o.stars){for(const s of starsBg){const x=((s[0]+t*.004*o.stars)%1)*W,tw=.5+.5*Math.sin(t*1.3+s[3]*40);c.fillStyle='rgba(235,240,255,'+(.35+.6*tw*s[3]).toFixed(2)+')';c.beginPath();c.arc(x,s[1]*H,s[2],0,7);c.fill()}}
   // 달무리
   const mx=W*.8,my=H*.2,mg=c.createRadialGradient(mx,my,0,mx,my,H*.42);mg.addColorStop(0,'rgba(210,225,255,.5)');mg.addColorStop(.08,'rgba(190,210,250,.22)');mg.addColorStop(1,'rgba(160,190,240,0)');
@@ -241,13 +371,45 @@ function drawTunnel(t){
     c.fillStyle='rgb('+Math.round(22*k+8)+','+Math.round(18*k+6)+','+Math.round(15*k+5)+')';
     c.beginPath();c.moveTo(X-a,fy);c.lineTo(X+a,fy);c.lineTo(X+R/(z+1),fy2);c.lineTo(X-R/(z+1),fy2);c.closePath();if(n<TUN.T1)c.fill();
     c.strokeStyle='rgba(70,52,38,'+(fog*.9).toFixed(2)+')';c.lineWidth=Math.max(1,a*.035);c.beginPath();c.moveTo(X-a*.42,fy);c.lineTo(X+a*.42,fy);c.stroke();
-    if(n%6===0){const lx=X-a*.8,ly=Y-a*.5,lr=a*.5,g=c.createRadialGradient(lx,ly,0,lx,ly,lr);g.addColorStop(0,'rgba(255,236,190,'+Math.min(1,fog*1.6).toFixed(2)+')');g.addColorStop(.12,'rgba(255,196,110,'+(fog*.8).toFixed(2)+')');g.addColorStop(1,'rgba(255,170,80,0)');c.fillStyle=g;c.beginPath();c.arc(lx,ly,lr,0,7);c.fill()}
+    if(n<TUN.T1){
+      const b=R/(z+1),sA=Y-a*.12,sB=Y-b*.12,st=n%2?.5:0;
+      // 벽돌 줄눈: 고리마다 엇갈리게
+      c.strokeStyle='rgba(0,0,0,'+(.3*fog+.1).toFixed(2)+')';c.lineWidth=Math.max(1,a*.005);c.beginPath();
+      for(let j=0;j<10;j++){const th=Math.PI*(j+st)/10;if(th<=0||th>=Math.PI)continue;c.moveTo(X+a*Math.cos(th),sA-a*Math.sin(th));c.lineTo(X+b*Math.cos(th),sB-b*Math.sin(th))}
+      [.08,.34].forEach(q=>[-1,1].forEach(sd=>{const qq=q+st*.26;c.moveTo(X+sd*a,Y+a*qq);c.lineTo(X+sd*b,Y+b*qq)}));
+      c.moveTo(X-a,fy);c.lineTo(X-a,sA);c.arc(X,sA,a,Math.PI,0,false);c.lineTo(X+a,fy);c.stroke();
+      // 아치 보강 리브 (세 칸마다)
+      if(n%3===0){c.strokeStyle='rgba('+Math.round((60+120*L)*k)+','+Math.round((48+84*L)*k)+','+Math.round((40+50*L)*k)+',.9)';c.lineWidth=Math.max(1.5,a*.03);c.beginPath();c.moveTo(X-a*.985,fy);c.lineTo(X-a*.985,sA);c.arc(X,sA,a*.985,Math.PI,0,false);c.lineTo(X+a*.985,fy);c.stroke()}
+      // 오른쪽 벽의 전선 두 가닥과 고정쇠
+      c.strokeStyle='rgba(6,6,9,'+(.8*fog+.15).toFixed(2)+')';c.lineWidth=Math.max(1,a*.011);c.beginPath();[-.06,.02].forEach(q=>{c.moveTo(X+a*.975,Y+a*q);c.lineTo(X+b*.975,Y+b*q)});c.stroke();
+      if(n%2===0){c.fillStyle='rgba(120,100,70,'+(fog*.8).toFixed(2)+')';c.fillRect(X+a*.955,Y-a*.075,a*.03,a*.11)}
+      // 배수로와 자갈 가장자리
+      c.fillStyle='rgba(0,0,0,'+(.35*fog+.1).toFixed(2)+')';[-1,1].forEach(sd=>{c.beginPath();c.moveTo(X+sd*a,fy);c.lineTo(X+sd*a*.86,fy);c.lineTo(X+sd*b*.86,fy2);c.lineTo(X+sd*b,fy2);c.closePath();c.fill()});
+      // 레일: 등불 아래에서 반짝인다
+      c.strokeStyle='rgba('+Math.round(120+130*L)+','+Math.round(120+100*L)+','+Math.round(130+50*L)+','+Math.min(1,fog*(.4+.9*L)).toFixed(2)+')';c.lineWidth=Math.max(1.5,a*.014);c.beginPath();[-.26,.26].forEach(sd=>{c.moveTo(X+sd*a,fy);c.lineTo(X+sd*b,fy2)});c.stroke();
+      // 대피 공간 (열두 칸마다, 오른쪽 벽)
+      if(n%12===3){c.fillStyle='rgba(0,0,0,.72)';c.beginPath();c.moveTo(X+a,fy);c.lineTo(X+a,Y+a*.18);c.lineTo(X+b,Y+b*.18);c.lineTo(X+b,fy2);c.closePath();c.fill()}
+      // 거리 표지 (여섯 칸마다, 왼쪽 벽)
+      if(n%6===3){c.fillStyle='rgba(225,225,215,'+Math.min(.9,fog*1.4).toFixed(2)+')';c.fillRect(X-a*.995,Y+a*.2,Math.max(2,(a-b)*.25),a*.07)}
+    }
+    if(n%6===0){const lw=Math.max(1,a*.012);c.strokeStyle='rgba(20,16,12,.9)';c.lineWidth=lw;c.beginPath();c.moveTo(X-a*.96,Y-a*.5);c.lineTo(X-a*.8,Y-a*.5);c.stroke()}
+    if(n%6===0){const lx=X-a*.8,ly=Y-a*.5,lr=a*.5,g=c.createRadialGradient(lx,ly,0,lx,ly,lr);g.addColorStop(0,'rgba(255,236,190,'+Math.min(1,fog*1.6).toFixed(2)+')');g.addColorStop(.12,'rgba(255,196,110,'+(fog*.8).toFixed(2)+')');g.addColorStop(1,'rgba(255,170,80,0)');c.fillStyle=g;c.beginPath();c.arc(lx,ly,lr,0,7);c.fill();c.fillStyle='rgba(255,246,214,'+Math.min(1,fog*2).toFixed(2)+')';c.beginPath();c.arc(lx,ly,Math.max(1.5,a*.035),0,7);c.fill()}
   }
   // 레일
   c.strokeStyle='rgba(200,205,220,.55)';c.lineWidth=2;[-.26,.26].forEach(s=>{const zn=Math.max(.3,zIn>0?.3:.3),a=R/zn;c.beginPath();c.moveTo(X+s*a,Y+a*.62);const zz=Math.max(zEnd,.3),af=R/Math.max(zz,40>zz?zz:40);c.lineTo(X+s*(zEnd<44?R/Math.max(zEnd,.3):0),Y+(zEnd<44?R/Math.max(zEnd,.3)*.62:0));c.stroke()});
   // 터널에 들어가기 전: 암벽과 입구
   if(zIn>.22){const a=R/zIn;const g=c.createLinearGradient(0,0,0,H);g.addColorStop(0,'#070a13');g.addColorStop(.5,'#141a26');g.addColorStop(1,'#0a0c12');c.fillStyle=g;c.beginPath();c.rect(0,0,W,H);arch(c,X,Y,a);c.fill('evenodd');
     c.strokeStyle='#39414f';c.lineWidth=Math.max(3,a*.13);c.beginPath();const fl=Y+a*.62,sp=Y-a*.12;c.moveTo(X-a*1.06,fl);c.lineTo(X-a*1.06,sp);c.arc(X,sp,a*1.06,Math.PI,0,false);c.lineTo(X+a*1.06,fl);c.stroke();
+    // 옹벽 돌 줄눈
+    c.save();c.beginPath();c.rect(0,0,W,H);arch(c,X,Y,a*1.12);c.clip('evenodd');c.strokeStyle='rgba(120,135,165,.13)';c.lineWidth=Math.max(1,a*.008);c.beginPath();
+    for(let r=-14;r<=3;r++){const yy=fl-r*a*.2;if(yy<-10||yy>H+10)continue;c.moveTo(0,yy);c.lineTo(W,yy);for(let q=-30;q<=30;q++){const xx=X+(q+(r&1?.5:0))*a*.46;if(xx<0||xx>W)continue;c.moveTo(xx,yy);c.lineTo(xx,yy-a*.2)}}
+    c.stroke();c.restore();
+    // 아치 돌과 쐐기돌
+    c.strokeStyle='#161b25';c.lineWidth=Math.max(1,a*.012);c.beginPath();for(let j=0;j<=14;j++){const th=Math.PI*j/14;c.moveTo(X+a*.995*Math.cos(th),sp-a*.995*Math.sin(th));c.lineTo(X+a*1.125*Math.cos(th),sp-a*1.125*Math.sin(th))}
+    [.14,.4].forEach(q=>[-1,1].forEach(sd=>{c.moveTo(X+sd*a*.995,Y+a*q);c.lineTo(X+sd*a*1.125,Y+a*q)}));c.stroke();
+    c.fillStyle='#4a5464';c.beginPath();c.moveTo(X-a*.07,sp-a*.98);c.lineTo(X+a*.07,sp-a*.98);c.lineTo(X+a*.1,sp-a*1.2);c.lineTo(X-a*.1,sp-a*1.2);c.closePath();c.fill();
+    // 입구 위 등
+    {const ly=sp-a*1.34,lg=c.createRadialGradient(X,ly,0,X,ly,a*.7);lg.addColorStop(0,'rgba(255,226,170,.55)');lg.addColorStop(.15,'rgba(255,190,110,.22)');lg.addColorStop(1,'rgba(255,170,80,0)');c.fillStyle=lg;c.beginPath();c.arc(X,ly,a*.7,0,7);c.fill();c.fillStyle='#fff3d0';c.beginPath();c.arc(X,ly,Math.max(2,a*.03),0,7);c.fill()}
     c.fillStyle='#0b0d12';c.fillRect(0,fl,W,H-fl);c.strokeStyle='rgba(200,205,220,.5)';c.lineWidth=2;[-.26,.26].forEach(s=>{c.beginPath();c.moveTo(X+s*R/.3,Y+R/.3*.62);c.lineTo(X+s*a,fl);c.stroke()});
     c.strokeStyle='rgba(180,200,240,.3)';c.lineWidth=1;c.beginPath();for(const d of drops){const y=((d[1]+t*1.6)%1)*H,x=d[0]*W;c.moveTo(x,y);c.lineTo(x-3,y+18)}c.stroke();
   }
@@ -272,7 +434,7 @@ function loop(now){
   FX.zoom+=(FX.zoomTo-FX.zoom)*Math.min(1,dt*.5);
   if(FX.mode==='title')drawLand(t,{rain:1,moving:true,trainX:h=>W*1.05-((t*W*.022)%(W*1.15+h*26))});
   else if(FX.mode==='tunnel')drawTunnel(t);
-  else if(FX.mode==='land')drawLand(t,{rain:1,moving:true,trainX:h=>W*.3-t*W*.004});
+  else if(FX.mode==='land')drawLand(t,{rain:1,moving:true,low:.78,trainX:h=>W*.3-t*W*.004});
   else if(FX.mode==='cab'){drawCab(t);drawShards(dt)}
 
     /* 엔딩 1단계: 완전히 멈춘 세계 */
@@ -281,7 +443,7 @@ function loop(now){
         stars: 1,
         rain: 2,          // 고정된 빗방울
         moving: false,    // 증기 및 열차 정지
-        low: .9,
+        low: .95,
         trainX: h => W * .34
       });
     }
@@ -292,7 +454,7 @@ function loop(now){
         stars: 1,
         rain: REDUCED ? 2 : 1,
         moving: false,    // 열차는 아직 정지
-        low: .9,
+        low: .95,
         trainX: h => W * .34
       });
     }
@@ -307,7 +469,7 @@ function loop(now){
         rain: REDUCED ? 2 : 1,
         dawn: motionT > 14,
         moving: !REDUCED,
-        low: .9,
+        low: .95,
         trainX: h => W * .34 - motionT * W * .012
       });
     }
@@ -340,7 +502,7 @@ function dripOne(big){
 function startDrips(){stopDrips();dripOn=true;let n=0;const go=()=>{if(!dripOn||n>=3)return;n++;dripOne(n===3);dripT=setTimeout(go,1100+Math.random()*500)};go()}
 function stopDrips(){dripOn=false;clearTimeout(dripT)}
 async function runIntro(){
-  skipFlag=false;show('intro');const I=$('#intro');I.classList.remove('wide');big.classList.remove('show');kick.classList.remove('show');cap.classList.remove('show');iw.className='';
+  skipFlag=false;show('intro');const I=$('#intro');I.classList.remove('wide','mid');big.classList.remove('show');kick.classList.remove('show');cap.classList.remove('show');iw.className='';
   big.querySelector('h2').innerHTML=[...'시간이 멈춘 열차'].map((ch,i)=>'<span style="transition-delay:'+(i*.16)+'s">'+(ch===' '?'&nbsp;':ch)+'</span>').join('');
   FX.shards=[];FX.fade=null;FX.frozen=false;
   try{
@@ -350,7 +512,7 @@ async function runIntro(){
       await new Promise((res,rej)=>{FX.done=res;cur=()=>{cur=null;skipFlag?rej('skip'):0};curHard=true});
       A.whistle();
     }
-    setMode('land');FX.flash=1;I.classList.add('wide');
+    setMode('land');FX.flash=1;I.classList.add('wide','mid');
     await wait(2600,true);
     kick.textContent='2026년 12월 31일 · 밤 11시 59분';kick.classList.add('show');
     await wait(2200,true);
@@ -365,7 +527,7 @@ async function runIntro(){
     A.applause(4.5);
     await line('','객실에 박수 소리가 번진다.',4200);
     cap.classList.remove('show');await wait(500,true);
-    setMode('cab');iw.innerHTML=watchSVG();iw.classList.add('show');
+    I.classList.remove('mid');setMode('cab');iw.innerHTML=watchSVG();iw.classList.add('show');
     await line('','박수 소리가 들려오지만,\n기관사는 창밖을 바라보며 어두운 표정을 짓는다.');
     for(let i=0;i<4;i++){A.tick();await wait(1000,true)}
     await line('','주머니에서 꺼낸 오래된 회중시계.\n바늘은 11시 59분을 가리키고 있다.');
@@ -375,7 +537,7 @@ async function runIntro(){
     A.crack();iw.classList.add('cracked');
     await wait(900,true);A.crack();await wait(500,true);
     // 산산조각
-    A.shatter();A.rumble(false);A.rain(false,1.6);iw.classList.remove('grip');iw.classList.add('gone');FX.frozen=true;
+    A.shatter();A.rumble(false);A.rain(false,1.6);A.stopTheme(.5);iw.classList.remove('grip');iw.classList.add('gone');FX.frozen=true;
     const r=iw.getBoundingClientRect(),ox=r.left+r.width/2,oy=r.top+r.height*.55;
     for(let i=0;i<170;i++){const a=Math.random()*6.283,v=(180+Math.random()*900)*(H/800);FX.shards.push({x:ox,y:oy,vx:Math.cos(a)*v,vy:Math.sin(a)*v,r:Math.random()*6,vr:(Math.random()-.5)*14,z:3+Math.random()*9,a:.6+Math.random()*.4,age:0,c:['#f0cf7e','#fff3cf','#c79a4b','#e9c46a'][i%4]})}
     cap.classList.remove('show');
@@ -386,7 +548,7 @@ async function runIntro(){
     await line('','그리고, 시간이 멈췄다.',3600);
     cap.classList.remove('show');await wait(900,true);
   }catch(e){if(e!=='skip')throw e}
-  stopDrips();A.rumble(false);A.rain(false,1.2);FX.done=null;startGame();
+  stopDrips();A.rumble(false);A.rain(false,1.2);A.stopTheme(1.2);FX.done=null;startGame();
 }
 $('#intro').addEventListener('click',e=>{if(e.target.id==='skip')return;if(cur&&!curHard)cur()});
 $('#skip').addEventListener('click',()=>{skipFlag=true;if(cur)cur()});
@@ -426,6 +588,7 @@ $('#board').addEventListener('click',()=>{
 
     if(rainPref!==false){
         A.rain(true,2);
+        A.theme();
         setSnd(true)
     }runIntro()
 });
@@ -479,7 +642,7 @@ function openModal(o){
     bt.onclick=()=>{S.hints[key]=1;h.hidden=false;h.classList.add('reveal');bt.remove();A.tick()};h.before(bt)});m.classList.add('on');m.onclick=e=>{if(e.target===m)closeModal()};
   p.querySelector('.x').focus();return p.querySelector('.body');
 }
-function closeModal(){$('#modal').classList.remove('on');if(lastFocus&&lastFocus.focus)try{lastFocus.focus()}catch(e){}}
+function closeModal(){$('#modal').classList.remove('on');hideTag();if(lastFocus&&lastFocus.focus&&!(lastFocus.closest&&lastFocus.closest('#scene')))try{lastFocus.focus()}catch(e){}else if(document.activeElement&&document.activeElement.blur)document.activeElement.blur()}
 function lock(n,sep){
   const v=Array(n).fill(0),e=el('div','lock');
   v.forEach((_,i)=>{const w=el('div','wheel','<button type="button" aria-label="'+(i+1)+'번째 숫자 올리기">▲</button><output id="dg'+i+'">0</output><button type="button" aria-label="'+(i+1)+'번째 숫자 내리기">▼</button>');
@@ -540,16 +703,34 @@ const SCENES={
   +seat(300,310,'#1e5557')+seat(690,310,'#1e5557')+seat(1080,310,'#1e5557')
   // 멈춘 승객
   +'<g class="hot" data-id="passenger" tabindex="0" role="button" aria-label="멈춘 승객"><path d="M1196 560q54 -30 108 0l14 130h-136Z" fill="#232b3d"/><circle cx="1250" cy="520" r="34" fill="#39445c"/><path d="M1208 508q42 -52 84 0Z" fill="#161b29"/><rect x="1202" y="504" width="96" height="8" rx="4" fill="#161b29"/><path d="M1206 590q-40 10 -4 -60l22 8q-14 30 6 40Z" fill="#232b3d"/><path d="M1294 590q40 10 8 -62l-22 8q14 30 -8 40Z" fill="#232b3d"/><ellipse cx="1212" cy="524" rx="12" ry="16" fill="#39445c" transform="rotate(24 1212 524)"/><ellipse cx="1290" cy="522" rx="12" ry="16" fill="#39445c" transform="rotate(-24 1290 522)"/><rect x="1282" y="538" width="18" height="9" rx="2" fill="url(#gBrass)" transform="rotate(-24 1290 542)"/></g>'
-  // 신문
-  +'<g class="hot" data-id="news" tabindex="0" role="button" aria-label="좌석 위 신문"><path d="M800 628l150 -14l10 44l-150 14Z" fill="#e6dcc3" stroke="#2a1c12"/><path d="M812 634l70 -6" stroke="#2a1c12" stroke-width="6"/><path d="M814 648l126 -12M816 658l126 -12" stroke="#2a1c12" stroke-width="2" opacity=".6"/><circle cx="914" cy="630" r="10" fill="none" stroke="#b3261e" stroke-width="2.5"/></g>'
-  // 여행가방
-  +'<g class="hot" data-id="suitcase" tabindex="0" role="button" aria-label="여행가방"><path d="M444 716v-16q0 -14 14 -14h44q14 0 14 14v16" fill="none" stroke="#2a160d" stroke-width="9"/><rect x="380" y="716" width="200" height="130" rx="12" fill="#6b3a22"/><rect x="380" y="716" width="200" height="130" rx="12" fill="url(#gWood)"/><rect x="408" y="716" width="18" height="130" fill="#3b2115"/><rect x="534" y="716" width="18" height="130" fill="#3b2115"/><rect x="456" y="740" width="48" height="26" rx="4" fill="url(#gBrass)"/><text x="480" y="759" text-anchor="middle" font-size="14" font-family="Special Elite,monospace" fill="#2a1c12">'+(S.flags.case4?'OPEN':'0000')+'</text></g>'
+  // 부부 승객: 신문을 읽던 남편, 커피를 마시던 아내
+  +'<g class="hot" data-id="couple" tabindex="0" role="button" aria-label="멈춘 부부">'
+   +'<path d="M716 560q54 -30 108 0l14 130h-136Z" fill="#232b3d"/><path d="M758 548l12 22l12 -22Z" fill="#4a566f"/><circle cx="770" cy="520" r="33" fill="#39445c"/><path d="M736 518Q736 482 770 482Q804 482 804 518Q796 500 776 500Q752 498 736 518Z" fill="#161b29"/>'
+   +'<path d="M884 566q46 -28 92 0l12 124h-116Z" fill="#2f2a40"/><path d="M895 526Q892 484 930 484Q968 484 965 526L969 578Q930 590 891 578Z" fill="#161b29"/><circle cx="930" cy="523" r="30" fill="#39445c"/><path d="M900 520Q902 490 930 489Q958 490 960 520Q948 503 931 503Q930 502 929 503Q912 503 900 520Z" fill="#161b29"/>'
+   +'<path d="M888 594q-24 22 12 36l8 -14q-14 -8 -4 -16Z" fill="#2f2a40"/><ellipse cx="912" cy="630" rx="24" ry="6" fill="#d8cdb6"/><ellipse cx="904" cy="627" rx="10" ry="7" fill="#39445c"/>'
+   +'<path d="M972 598q36 6 14 -46l-20 8q10 22 -8 30Z" fill="#2f2a40"/><rect x="951" y="536" width="24" height="20" rx="4" fill="#efe2c4"/><path d="M975 541q9 0 9 5.5q0 5.5 -9 5.5" fill="none" stroke="#efe2c4" stroke-width="3"/><rect x="951" y="536" width="24" height="4" rx="2" fill="#6b3a22"/><ellipse cx="967" cy="558" rx="12" ry="8" fill="#39445c"/>'
+   +'<path d="M957 528q-5 -8 0 -15q5 -7 0 -14M968 528q-5 -8 0 -15q5 -7 0 -14" fill="none" stroke="#cfe0ff" stroke-width="2" stroke-linecap="round" opacity=".5"/>'
+  +'</g>'
+  // 남편이 펼쳐 든 신문
+  +'<g class="hot" data-id="news" tabindex="0" role="button" aria-label="남자가 읽던 신문"><path d="M696 574l74 12l74 -12l6 94l-80 12l-80 -12Z" fill="#e6dcc3" stroke="#2a1c12"/><path d="M770 586v94" stroke="#2a1c12" stroke-width="1.5" opacity=".5"/><path d="M706 590l54 9" stroke="#2a1c12" stroke-width="6"/><path d="M705 606l56 9M704 618l57 9M703 630l58 9M702 642l59 9M701 654l60 9" stroke="#2a1c12" stroke-width="2" opacity=".55"/><rect x="780" y="596" width="54" height="30" fill="#b9ae95" transform="skewY(-9)" style="transform-origin:780px 596px"/><path d="M780 640l56 -9M780 652l57 -9M780 664l58 -9" stroke="#2a1c12" stroke-width="2" opacity=".55"/><circle cx="826" cy="660" r="10" fill="none" stroke="#b3261e" stroke-width="2.5"/><ellipse cx="697" cy="622" rx="9" ry="13" fill="#39445c"/><ellipse cx="843" cy="622" rx="9" ry="13" fill="#39445c"/></g>'
+  // 가방 보관함 (왼쪽 벽)
+  +'<g><rect x="20" y="236" width="260" height="490" rx="6" fill="#2a160d"/><rect x="20" y="236" width="260" height="490" rx="6" fill="none" stroke="url(#gBrass)" stroke-width="3"/>'
+   +'<rect x="92" y="246" width="116" height="28" rx="4" fill="#120c09" stroke="url(#gBrass)" stroke-width="1.5"/><text x="150" y="266" text-anchor="middle" font-size="16" font-weight="800" fill="#f0cf7e">가방 보관함</text>'
+   +[284,430,576].map(y=>'<rect x="34" y="'+y+'" width="232" height="136" fill="#140a06"/><rect x="34" y="'+y+'" width="232" height="30" fill="#000" opacity=".35"/><rect x="34" y="'+(y+136)+'" width="232" height="10" fill="#5a3320"/><rect x="34" y="'+(y+136)+'" width="232" height="3" fill="url(#gBrass)"/>').join('')
+   // 위 칸: 모자 상자와 작은 손가방
+   +'<ellipse cx="104" cy="420" rx="52" ry="8" fill="#3d4a66"/><rect x="52" y="356" width="104" height="64" fill="#3d4a66"/><ellipse cx="104" cy="356" rx="52" ry="8" fill="#56658a"/><rect x="52" y="380" width="104" height="6" fill="#c79a4b" opacity=".7"/>'
+   +'<path d="M196 372q0 -20 18 -20q18 0 18 20" fill="none" stroke="#2a160d" stroke-width="6"/><rect x="176" y="370" width="76" height="50" rx="8" fill="#7a2a2c"/><rect x="206" y="370" width="16" height="16" rx="3" fill="url(#gBrass)"/>'
+   // 아래 칸: 낡은 트렁크
+   +'<rect x="54" y="630" width="192" height="82" rx="6" fill="#33402f"/><rect x="54" y="630" width="192" height="82" rx="6" fill="url(#gWood)"/><rect x="54" y="664" width="192" height="6" fill="#1c2419"/><rect x="84" y="630" width="12" height="82" fill="#5a3320"/><rect x="204" y="630" width="12" height="82" fill="#5a3320"/><rect x="140" y="656" width="20" height="20" rx="3" fill="url(#gBrass)"/>'
+  +'</g>'
+  // 여행가방 (보관함 가운데 칸)
+  +'<g class="hot" data-id="suitcase" tabindex="0" role="button" aria-label="보관함 속 여행가방" transform="translate(150 566) scale(.8) translate(-480 -846)"><path d="M444 716v-16q0 -14 14 -14h44q14 0 14 14v16" fill="none" stroke="#2a160d" stroke-width="9"/><rect x="380" y="716" width="200" height="130" rx="12" fill="#6b3a22"/><rect x="380" y="716" width="200" height="130" rx="12" fill="url(#gWood)"/><rect x="408" y="716" width="18" height="130" fill="#3b2115"/><rect x="534" y="716" width="18" height="130" fill="#3b2115"/><rect x="456" y="740" width="48" height="26" rx="4" fill="url(#gBrass)"/><text x="480" y="759" text-anchor="middle" font-size="14" font-family="Special Elite,monospace" fill="#2a1c12">'+(S.flags.case4?'OPEN':'0000')+'</text></g>'
  ),
  3:()=>shell({label:'3호차 식당칸',wall:'#6b1d1f',ceil:'#e2d2ac',trim:'#3a0e10',dado:'#4a2a1a',floor:'#1d3b3c',lamps:[455,845,1235]},
    door('2호차',S.flags.reg&&S.flags.mbox)
   +win(330,rainWin(31,250,255))+win(720,rainWin(32,250,255))+win(1110,rainWin(33,250,255))
   // 메뉴판
-  +'<g class="hot" data-id="menu" tabindex="0" role="button" aria-label="메뉴판"><rect x="606" y="250" width="92" height="150" rx="4" fill="#5a3320" stroke="url(#gBrass)" stroke-width="3"/><rect x="616" y="260" width="72" height="130" fill="#1d241f"/><text x="652" y="284" text-anchor="middle" font-size="15" fill="#e8e2cf" font-family="Nanum Pen Script,cursive">MENU</text><path d="M626 304h52M626 324h52M626 344h40M626 364h46" stroke="#e8e2cf" stroke-width="2" opacity=".7"/></g>'
+  +'<g class="hot" data-id="menu" tabindex="0" role="button" aria-label="메뉴판"><rect x="60" y="206" width="184" height="150" rx="4" fill="#5a3320" stroke="url(#gBrass)" stroke-width="3"/><rect x="70" y="216" width="164" height="130" fill="#1d241f"/><text x="152" y="241" text-anchor="middle" font-size="17" fill="#e8e2cf" font-family="Nanum Pen Script,cursive">MENU</text><path d="M84 252h136" stroke="#e8e2cf" stroke-width="1" opacity=".4"/><path d="M84 272h60M84 296h78M84 320h50" stroke="#e8e2cf" stroke-width="2.4" opacity=".75"/><path d="M152 272h26M170 296h8M142 320h36" stroke="#e8e2cf" stroke-width="1.2" stroke-dasharray="2 4" opacity=".45"/><path d="M186 272h34M186 296h34M186 320h34" stroke="#e8e2cf" stroke-width="2.4" opacity=".75"/></g>'
   // 식탁
   +[330,720,1110].map(x=>'<g><rect x="'+(x+110)+'" y="500" width="8" height="70" fill="url(#gBrass)"/><path d="M'+(x+84)+' 500h60l-14 -40h-32Z" fill="#f2d7a0"/><circle cx="'+(x+114)+'" cy="486" r="90" fill="url(#gLamp)" opacity=".8"/><path d="M'+(x-30)+' 580h310l26 130h-362Z" fill="#f2ece0"/><path d="M'+(x-30)+' 580h310l6 30h-322Z" fill="#fff" opacity=".5"/><path d="M'+(x-56)+' 710h362v14h-362Z" fill="#cfc6b4"/></g>').join('')
   // 영수증
@@ -617,7 +798,7 @@ const ORDER=[4,3,2,1,0];
 const F=k=>()=>!!S.flags[k];
 /* 칸마다 살펴볼 곳: lock은 퍼즐, clue는 단서 수첩에 기록, look은 그냥 보기, door는 다음 칸 */
 const SPOTS={
- 4:[{id:'clock',label:'벽시계',type:'lock',done:F('clock')},{id:'suitcase',label:'여행가방',type:'lock',done:F('case4')},{id:'news',label:'좌석 위 신문',type:'clue'},{id:'passenger',label:'멈춘 승객',type:'clue'},{id:'window',label:'창밖',type:'look'},{id:'door',label:'3호차 연결문',type:'door',done:()=>!!(S.flags.clock&&S.flags.case4)}],
+ 4:[{id:'clock',label:'벽시계',type:'lock',done:F('clock')},{id:'suitcase',label:'보관함 속 여행가방',type:'lock',done:F('case4')},{id:'news',label:'남자가 읽던 신문',type:'clue'},{id:'couple',label:'멈춘 부부',type:'look'},{id:'passenger',label:'멈춘 승객',type:'clue'},{id:'window',label:'창밖',type:'look'},{id:'door',label:'3호차 연결문',type:'door',done:()=>!!(S.flags.clock&&S.flags.case4)}],
  3:[{id:'register',label:'금전등록기',type:'lock',done:F('reg')},{id:'musicbox',label:'추억의 오르골',type:'lock',done:F('mbox')},{id:'menu',label:'메뉴판',type:'clue'},{id:'receipt',label:'식탁 위 영수증',type:'clue'},{id:'door',label:'2호차 연결문',type:'door',done:()=>!!(S.flags.reg&&S.flags.mbox)}],
  2:[{id:'trunk',label:'낡은 트렁크',type:'lock',done:F('trunk')},{id:'starbox',label:'별이 새겨진 상자',type:'lock',done:F('sbox')},{id:'calendar',label:'벽 달력',type:'clue'},{id:'book',label:'그림책',type:'clue'},{id:'stars',label:'창밖의 별자리',type:'clue'},{id:'door',label:'1호차 연결문',type:'door',done:()=>!!(S.flags.trunk&&S.flags.sbox)}],
  1:[{id:'cabinet',label:'기록 보관함',type:'lock',done:F('cab')},{id:'locker',label:'물품 보관함',type:'lock',done:F('letter')},{id:'door',label:'기관실 연결문',type:'lock',done:F('cabdoor')},{id:'notice',label:'운행 안내문',type:'clue'},{id:'plaque',label:'문 옆 명판',type:'clue'}],
@@ -628,9 +809,9 @@ const locksOf=c=>SPOTS[c].filter(m=>m.type==='lock');
 const carDone=c=>locksOf(c).every(m=>m.done());
 function spotState(c,m){if(m.type==='lock')return m.done()?'solved':'lock';if(m.type==='door'&&m.done())return 'solved';return S.seen[c+':'+m.id]?'seen':''}
 function openSpot(c,id){
-  const m=meta(c,id);if(!m)return;A.init();const k=c+':'+id;S.seen[k]=1;
+  const m=meta(c,id);if(!m)return;if($('#game').classList.contains('busy')&&c===S.car)return;A.init();const k=c+':'+id;S.seen[k]=1;
   if(m.type==='clue'&&!S.notes.includes(k)){S.notes.push(k);setTimeout(()=>toast('단서 수첩에 기록 · '+m.label),50)}
-  const f=ON[c]&&ON[c][id];if(f)f();
+  curLabel=m.label;const f=ON[c]&&ON[c][id];if(f)f();
   if(c===S.car&&$('#game').classList.contains('on'))renderSpots();renderSide();
 }
 function render(){
@@ -648,34 +829,43 @@ function renderSpots(){
   $('#spots').innerHTML=SPOTS[S.car].map(m=>'<button type="button" class="chip '+(m.type==='lock'?'puz ':'')+spotState(S.car,m)+'" data-spot="'+m.id+'"><span class="k" aria-hidden="true"></span>'+m.label+'</button>').join('');
   $('#next').innerHTML=(carDone(S.car)&&S.car!==0)?'<button class="btn" type="button" data-go="'+(S.car-1)+'">문이 열렸다 · '+CARS[S.car-1].n+'(으)로 이동 ▶</button>':'';
 }
+/* 객차에 들어와 소개가 끝날 때까지는 물건·선택지를 누를 수 없다 */
+let busyRun=0;
+function setBusy(on){$('#game').classList.toggle('busy',on)}
 async function enterCar(c){
+  const run=++busyRun;setBusy(true);
   S.car=c;S.reached=Math.min(S.reached,c);closeModal();render();
   try{$('#game').scrollTo({top:0,behavior:REDUCED?'auto':'smooth'})}catch(e){}
   const k=$('#card');k.firstElementChild.textContent=CARS[c].n;k.lastElementChild.textContent=CARS[c].sub;k.classList.add('show');
   say({4:'객실 안의 모든 것이 멈춰 있다. 눈에 띄는 것을 눌러 살펴보자.',3:'식당칸이다. 식탁 위에 누군가의 흔적이 남아 있다.',2:'조명이 꺼진 객실. 창밖으로 별이 또렷하게 보인다.',1:'승무원이 쓰는 칸이다. 기관실로 이어지는 철문이 보인다.',0:'기관실. 기관사가 창밖을 바라본 채 멈춰 있다.'}[c]);
   setTimeout(()=>k.classList.remove('show'),REDUCED?900:2200);
+  await new Promise(r=>setTimeout(r,REDUCED?900:2300));
   if(c===4&&!S.flags.woke){
     S.flags.woke=1;
-    await new Promise(r=>setTimeout(r,REDUCED?900:2300));
     await speak(['눈을 뜬다. 열차가 멈춰 있다.<br>박수를 치던 사람들도, 창밖의 빗방울도 그대로 굳어 있다.','주머니가 묵직하다.<br>꺼내 보니 속이 텅 빈 회중시계 케이스가 들어 있다.','멈춘 열차 안에서 움직일 수 있는 사람은 나뿐이다.<br>아마도, 이 케이스 때문에.']);
     addItem('case');
   }
+  if(run===busyRun)setBusy(false);
 }
 function startGame(){FX.mode='off';cx.clearRect(0,0,W,H);S.started=true;show('game');enterCar(S.car)}
 let leverBusy=false;
 const locked=()=>{A.locked();const w=$('#sceneWrap');w.classList.remove('shake');void w.offsetWidth;w.classList.add('shake');say('문이 움직이지 않는다. 이 객실에서 아직 풀지 못한 것이 남아 있다.')};
 
+/* 단서가 아닌 물건: 짧은 설명을 팝업으로 보여 준다 */
+let curLabel='';
+function look(t){openModal({k:'살펴보기',title:curLabel,html:'<p>'+t+'</p>'})}
 const ON={
  4:{
-  window(){say('창밖의 빗방울이 공중에 멈춰 있다. 떨어지지도, 흐르지도 않는다.')},
+  window(){look('창밖의 빗방울이 공중에 멈춰 있다. 떨어지지도, 흐르지도 않는다.')},
   passenger(){openModal({k:'단서',title:'멈춘 승객',html:'<p>박수를 치던 승객. 두 손이 맞닿기 직전에 그대로 굳어 있다. 숨소리도 들리지 않는다.</p><p>손목시계의 바늘은 <b>11시 59분</b>에 멈춰 있다. 초침도 움직이지 않는다.</p>'});},
-  news(){openModal({k:'단서',title:'좌석 위의 신문',html:'<div class="news"><p class="dl">2026년 12월 31일 목요일</p><h4>40년의 운행, 오늘 마지막 열차를 달리다</h4><p><b>한시원 기관사, 오늘 밤 마지막 운행</b></p><p>1963년 개통한 새벽선의 야간열차를 40년 동안 몰아 온 한시원 기관사가 오늘 마지막 운행을 마친다. 1985년 견습 기관사로 철도에 들어온 그는 이듬해 처음으로 직접 열차를 몰았고, 2026년 12월 31일을 끝으로 은퇴한다.</p><p>철도 관계자는 “오랜 세월 승객들의 안전을 위해 헌신한 기관사에게 감사드린다”고 전했다.</p></div><p class="pencil">“모든 여정에는 시작과 끝이 있다.”</p>'});},
+  couple(){look('신문을 읽던 남편과 커피를 마시던 아내. 찻잔에서 피어오르던 김마저 공중에 그대로 멈춰 있다.')},
+  news(){openModal({k:'단서',title:'남자가 읽던 신문',html:'<div class="news"><p class="dl">2026년 12월 31일 목요일</p><h4>40년의 운행, 오늘 마지막 열차를 달리다</h4><p><b>한시원 기관사, 오늘 밤 마지막 운행</b></p><p>1963년 개통한 새벽선의 야간열차를 40년 동안 몰아 온 한시원 기관사가 오늘 마지막 운행을 마친다. 1985년 견습 기관사로 철도에 들어온 그는 이듬해 처음으로 직접 열차를 몰았고, 2026년 12월 31일을 끝으로 은퇴한다.</p><p>철도 관계자는 “오랜 세월 승객들의 안전을 위해 헌신한 기관사에게 감사드린다”고 전했다.</p></div><p class="pencil">“모든 여정에는 시작과 끝이 있다.”</p>'});},
   clock(){
-    if(S.flags.clock)return say('벽시계는 11시 59분을 가리킨 채 멈춰 있다. 아래 칸은 이미 열려 있다.');
+    if(S.flags.clock)return look('벽시계는 11시 59분을 가리킨 채 멈춰 있다. 아래 칸은 이미 열려 있다.');
     puzzle({title:'벽시계',desc:'바늘이 빠져 있는 벽시계. 추 아래 작은 칸이 잠겨 있고, 숫자판 네 개가 달려 있다.',hint:'마지막 순간을 기억하라.',n:4,answer:'1159',wrong:'칸은 꿈쩍도 하지 않는다.',ok(){S.flags.clock=1;render();addItem('diary1');say('벽시계 아래 칸이 열리고, 낡은 일기장이 나왔다.');showItem('diary1',1)}});
   },
   suitcase(){
-    if(S.flags.case4)return say('여행가방은 열려 있다. 안에는 더 이상 아무것도 없다.');
+    if(S.flags.case4)return look('여행가방은 열려 있다. 안에는 더 이상 아무것도 없다.');
     puzzle({title:'여행가방',desc:'낡은 가죽 여행가방. 네 자리 자물쇠로 잠겨 있다. 손잡이에 “한시원”이라는 이름표가 달려 있다.',hint:'그가 처음으로 직접 열차를 몬 해. 신문을 다시 읽어 보자.',n:4,answer:'1986',ok(){S.flags.case4=1;render();addItem('spring');say('가방 안쪽 주머니에서 금빛 태엽이 나왔다. 3호차로 가는 문에서 딸깍 소리가 난다.');showItem('spring',1)}});
   },
   door(){S.flags.clock&&S.flags.case4?enterCar(3):locked()}
@@ -684,11 +874,11 @@ const ON={
   menu(){openModal({k:'단서',title:'메뉴판',html:'<div class="menu"><div><span>커피</span><span>2,500원</span></div><div><span>조각 케이크</span><span>4,000원</span></div><div><span>홍차</span><span>3,000원</span></div></div>'});},
   receipt(){openModal({k:'단서',title:'식탁 위의 영수증',html:'<div class="rcpt"><p style="text-align:center;margin:0 0 8px">새벽 식당칸<br>1985. 4.</p><div><span>커피</span><span>× 2</span></div><div><span>조각 케이크</span><span>× 1</span></div><p style="margin:10px 0 0;border-top:1px dashed #2a1c12;padding-top:6px">합계 ……</p></div><p>오래된 영수증이다. 끝부분이 찢겨 나갔다. 두 사람이 마주 앉았던 자리 같다.</p>'});},
   register(){
-    if(S.flags.reg)return say('금전등록기 서랍은 열려 있다. 표시창에 9000이 떠 있다.');
+    if(S.flags.reg)return look('금전등록기 서랍은 열려 있다. 표시창에 9000이 떠 있다.');
     puzzle({title:'금전등록기',desc:'오래된 금전등록기. 네 자리 숫자를 누르는 자판이 달려 있다.',hint:'그날 두 사람이 먹은 것의 값. 메뉴판과 영수증을 함께 보자.',n:4,answer:'9000',btn:'계산하기',wrong:'땡. 금액이 맞지 않는다.',ok(){S.flags.reg=1;render();addItem('photo');say('서랍이 열리고, 지폐 대신 사진 한 장이 들어 있다. 뒷면에 글씨가 보인다.');showItem('photo',1)}});
   },
   musicbox(){
-    if(S.flags.mbox)return say('오르골은 열려 있다. 멜로디는 한 음에서 멈춘 채 울리지 않는다.');
+    if(S.flags.mbox)return look('오르골은 열려 있다. 멜로디는 한 음에서 멈춘 채 울리지 않는다.');
     const b=openModal({k:'퍼즐',title:'추억의 오르골',html:'<p>뚜껑이 잠긴 오르골. 색이 다른 버튼 네 개가 달려 있다. 정해진 순서대로 눌러야 열릴 것 같다.</p><div class="hint"><b>힌트</b>'+(has('photo')?'사진 뒷면에 적힌 물건의 순서, 그리고 앞면에서 그 물건들의 색.':'순서를 알려 줄 단서가 아직 없다. 이 객실을 더 살펴보자.')+'</div><div class="mbox"></div><div class="dots"><i></i><i></i><i></i><i></i></div><p class="msg"></p>'});
     const seq=[],ans='ybrg',box=b.querySelector('.mbox'),dots=b.querySelectorAll('.dots i'),msg=b.querySelector('.msg');
     [['r','#c62f2b','빨강',392],['g','#3f9a56','초록',523],['y','#f2c230','노랑',330],['b','#2d5fa8','파랑',440]].forEach(q=>{const bt=el('button');bt.type='button';bt.style.background=q[1];bt.setAttribute('aria-label',q[2]+' 버튼');bt.id='mb-'+q[0];
@@ -704,13 +894,13 @@ const ON={
     for(let d=1;d<=31;d++){const m=mk[d];g+='<span class="'+(m?'o':'')+'">'+d+(m==='U'?'<svg viewBox="0 0 40 40" width="18" height="18" aria-label="노란 우산 그림">'+umb('#f2c230')+'</svg>':m?'<small>'+m+'</small>':'')+'</span>'}
     openModal({k:'단서',title:'벽 달력',html:g+'</div><p style="margin-top:12px">3월에서 넘어가지 않은 달력. 날짜 몇 개에 붉은 동그라미가 쳐 있다. 한 칸에만 글씨 대신 작은 그림이 그려져 있다.</p>'});},
   trunk(){
-    if(S.flags.trunk)return say('트렁크는 열려 있다. 일기장이 있던 자리만 남아 있다.');
+    if(S.flags.trunk)return look('트렁크는 열려 있다. 일기장이 있던 자리만 남아 있다.');
     puzzle({title:'낡은 트렁크',desc:'좌석 아래 밀어 넣어 둔 트렁크. 네 자리 자물쇠가 달려 있다. 오랫동안 아무도 열지 않은 것 같다.',hint:'잊을 수 없는 날. 그녀를 떠올리게 하는 것이 그려진 날짜.',n:4,answer:'0314',ok(){S.flags.trunk=1;render();addItem('diary3');say('트렁크 안에서 기관사의 일기가 나왔다.');showItem('diary3',1)}});
   },
   book(){openModal({k:'단서',title:'그림책',wide:1,html:'<div class="book"><div><p><b>별 세는 밤</b></p><p>창밖의 별자리마다 별이 몇 개씩 모여 있는지 세어 보세요.</p></div><div><p style="font-size:13px;color:#7a5530">마지막 장, 아이의 낙서</p><p class="kid">“시간이 흘러야 별도 움직이고, 새로운 별도 볼 수 있대요!”</p></div></div>'});},
   stars(){openModal({k:'살펴보기',title:'창밖의 별자리',wide:1,html:'<div class="starview"><svg viewBox="0 0 780 260">'+[0,1,2].map(i=>'<g transform="translate('+(i*260+5)+' 0)">'+starWin(i)+'</g>').join('')+'</svg></div><p style="margin-top:12px">세 개의 창에 별자리가 하나씩 걸려 있다. 별들도 제자리에 멈춰 있다.</p>'})},
   starbox(){
-    if(S.flags.sbox)return say('놋쇠 상자는 열려 있다.');
+    if(S.flags.sbox)return look('놋쇠 상자는 열려 있다.');
     puzzle({title:'별이 새겨진 놋쇠 상자',desc:'뚜껑에 별 세 개가 새겨진 작은 상자. 세 자리 자물쇠로 잠겨 있다.',hint:'그림책의 말대로 별을 세어, 왼쪽 창부터 읽어 보자.',n:3,answer:'463',ok(){S.flags.sbox=1;render();addItem('hand');say('상자 안에 시계바늘이 가지런히 놓여 있다.');showItem('hand',1)}});
   },
   door(){S.flags.trunk&&S.flags.sbox?enterCar(1):locked()}
@@ -719,11 +909,11 @@ const ON={
   notice(){openModal({k:'단서',title:'운행 안내문',html:'<div class="news"><h4>운행 안내</h4><p>오늘 밤 이 열차는 한시원 기관사의 <b>마지막 운행</b>입니다.</p><p>종착역: 새벽역 · 도착 예정 24:00</p><p>40년간의 운행 기록은 기록 보관함에 보관되어 있습니다.</p></div>'});},
   plaque(){openModal({k:'단서',title:'문 옆 명판',html:'<p><b>기관실</b> · 관계자 외 출입 금지</p><p>문에는 날짜를 맞추는 달력식 잠금장치가 달려 있다.</p><p class="pencil">“여정이 끝난 다음 장에서 이 문이 열린다.”</p>'});},
   cabinet(){
-    if(S.flags.cab)return say('기록 보관함은 비어 있다.');
+    if(S.flags.cab)return look('기록 보관함은 비어 있다.');
     puzzle({title:'기록 보관함',desc:'운행 기록이 들어 있는 철제 보관함. 네 자리 자물쇠 옆에 ‘마지막 장’이라는 글귀가 새겨져 있다.',hint:'마지막 운행은 언제였을까. 이 열차의 다른 칸에 그 날짜가 적혀 있었다.',n:4,answer:'1231',ok(){S.flags.cab=1;render();addItem('diary4');addItem('glass');say('보관함에서 마지막 일기와 유리조각이 나왔다.');showItem('diary4',1)}});
   },
   locker(){
-    if(S.flags.letter)return say('물품 보관함에는 주인을 기다리는 물건들만 남아 있다.');
+    if(S.flags.letter)return look('물품 보관함에는 주인을 기다리는 물건들만 남아 있다.');
     const shapes={umb:c=>umb(c),star:c=>'<path transform="translate(20 20) scale(1.4)" d="M0 -11Q1.5 -1.5 11 0Q1.5 1.5 0 11Q-1.5 1.5 -11 0Q-1.5 -1.5 0 -11Z" fill="'+c+'"/>',moon:c=>'<path d="M26 6A15 15 0 1 0 34 30A12 12 0 1 1 26 6Z" fill="'+c+'"/>',heart:c=>'<path d="M20 34L6 19Q2 8 12 7Q18 7 20 13Q22 7 28 7Q38 8 34 19Z" fill="'+c+'"/>',train:c=>'<rect x="6" y="12" width="28" height="16" rx="3" fill="'+c+'"/><circle cx="12" cy="31" r="4" fill="#2a1c12"/><circle cx="28" cy="31" r="4" fill="#2a1c12"/><rect x="10" y="15" width="8" height="6" fill="#fff"/>',flower:c=>[0,72,144,216,288].map(a=>'<circle cx="20" cy="11" r="6" fill="'+c+'" transform="rotate('+a+' 20 20)"/>').join('')+'<circle cx="20" cy="20" r="4" fill="#f2c230"/>'};
     const L=[['umb','#c62f2b','빨간 우산이 그려진 엽서.','새벽역 역무실'],['star','#f2c230','별이 그려진 봉투. 아이 글씨다.','기관사 할아버지께'],['train','#6b1d1f','기차 스티커가 붙은 소포 꼬리표.','4호차 7번 좌석 손님'],['umb','#f2c230','노란 우산이 그려진 엽서.','한시운'],['flower','#d77aa0','꽃이 그려진 축하 카드.','김도윤 차장'],['umb','#2d5fa8','파란 우산이 그려진 편지.','분실물 센터'],['heart','#c62f2b','하트가 그려진 쪽지.','(비어 있음)'],['umb','#f2c230','노란 우산이 그려진 편지. 단단히 봉인되어 있다.','한시원',1],['umb','#f2c230','노란 우산이 그려진 봉투.','새벽역 역장'],['star','#2d5fa8','파란 별 도장이 찍힌 봉투.','윤정'],['train','#1e5557','초록 기차가 그려진 승차권 봉투.','한시원 기관사 귀하 (반송)'],['moon','#cfd8e8','은빛 달이 그려진 초대장.','기관실 승무원 일동']];
     const b=openModal({k:'퍼즐',title:'물품 보관함',wide:1,html:'<p>주인을 찾지 못한 편지와 엽서가 잔뜩 쌓여 있다. 이 가운데 기관사 앞으로 온 것이 있을지도 모른다.</p><div class="hint"><b>힌트</b>일기 속 그녀는 늘 무엇을 쓰고 있었나. 그리고 받는 사람의 이름을 정확히.</div><div class="lost" style="margin-top:14px"></div><p class="msg"></p>'});
@@ -749,9 +939,9 @@ const ON={
   }
  },
  0:{
-  gauges(){say('압력계의 바늘이 모두 제자리에 멈춰 있다. 화실의 불꽃도 흔들리지 않는다.')},
+  gauges(){look('압력계의 바늘이 모두 제자리에 멈춰 있다. 화실의 불꽃도 흔들리지 않는다.')},
   bench(){
-    if(S.flags.fixed)return say('회중시계가 작업대 위에서 조용히 빛나고 있다. 초침은 아직 움직이지 않는다.');
+    if(S.flags.fixed)return look('회중시계가 작업대 위에서 조용히 빛나고 있다. 초침은 아직 움직이지 않는다.');
     const placed={},names={spring:'태엽',gear:'톱니바퀴',hand:'시계바늘',glass:'유리조각'};
     const b=openModal({k:'최종 퍼즐',title:'회중시계 고치기',wide:1,html:'<p>빈 케이스를 작업대에 올려놓았다. 모아 온 부품을 눌러 제자리에 끼워 넣자.</p><div class="bench"><div class="w"></div><div class="tray"></div></div><p class="msg"></p>'});
     const w=b.querySelector('.w'),tray=b.querySelector('.tray'),msg=b.querySelector('.msg');
@@ -765,8 +955,8 @@ const ON={
       };tray.append(bt)});
   },
   engineer(){
-    if(S.flags.given)return say('기관사의 손에 편지가 들려 있다. 이제 출발 레버를 당길 차례다.');
-    if(!S.flags.fixed)return say('한시원 기관사. 창밖을 바라본 채 멈춰 있다. 손에는 끊어진 시곗줄만 남아 있다.');
+    if(S.flags.given)return look('기관사의 손에 편지가 들려 있다. 이제 출발 레버를 당길 차례다.');
+    if(!S.flags.fixed)return look('한시원 기관사. 창밖을 바라본 채 멈춰 있다. 손에는 끊어진 시곗줄만 남아 있다.');
     const b=openModal({k:'기관실',title:'한시원 기관사',html:'<p>창밖을 바라보는 기관사의 손이 반쯤 펴져 있다. 무언가를 놓친 사람의 손이다.</p><div class="acts"><button class="btn" type="button" id="give">봉인된 편지를 건넨다</button></div>'});
     b.querySelector('#give').onclick=async()=>{
       closeModal();A.get();
@@ -799,7 +989,7 @@ function showTag(h){const m=meta(S.car,h.dataset.id);if(!m)return;const r=h.getB
 function hideTag(){tagEl.classList.remove('show')}
 $('#scene').addEventListener('mouseover',e=>{const h=e.target.closest('.hot');h?showTag(h):hideTag()});
 $('#scene').addEventListener('mouseleave',hideTag);
-$('#scene').addEventListener('focusin',e=>{const h=e.target.closest('.hot');if(h)showTag(h)});
+$('#scene').addEventListener('focusin',e=>{const h=e.target.closest('.hot');if(h&&h.matches(':focus-visible'))showTag(h)});
 $('#scene').addEventListener('focusout',hideTag);
 $('#bSound').onclick=e=>{A.init();A.setMute(!A.mute);e.currentTarget.setAttribute('aria-pressed',!A.mute);e.currentTarget.textContent=A.mute?'소리 꺼짐':'소리 켜짐'};
 $('#bReset').onclick=()=>{const b=openModal({k:'처음부터',title:'처음부터 다시 탈까요?',html:'<p>지금까지 푼 퍼즐과 모은 단서, 소지품이 모두 사라집니다.</p><div class="acts"><button class="btn" type="button" id="cfYes">다시 시작</button><button class="btn ghost" type="button" id="cfNo">취소</button></div>'});b.querySelector('#cfYes').onclick=resetAll;b.querySelector('#cfNo').onclick=closeModal};
@@ -809,6 +999,7 @@ function resetAll(){
 
     A.rumble(false);
     A.stopPiece(1.2);
+    A.stopTheme(.6);
     A.rain(false,.6);
 
     rainPref=true;

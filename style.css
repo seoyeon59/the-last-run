@@ -72,6 +72,9 @@ button{font:inherit;color:inherit;cursor:pointer}
 #big.show p{opacity:1}
 #cap{position:absolute;left:0;right:0;bottom:calc(11vh + 5vh);z-index:3;text-align:center;padding:0 20px;opacity:0;transition:opacity .7s}
 #cap.show{opacity:1}
+/* 풍경 장면: 자막을 화면 가운데로 */
+#intro.mid #cap{bottom:auto;top:50%;transform:translateY(-50%)}
+#intro.mid #kicker{top:calc(50% - clamp(90px,13vw,170px))}
 #cap small{display:block;font-family:var(--font-type);letter-spacing:.3em;font-size:12px;color:var(--brass);margin-bottom:8px;min-height:1em}
 #cap p{margin:0 auto;max-width:40em;white-space:pre-line;word-break:keep-all;font-size:clamp(17px,2.3vw,25px);line-height:1.65;text-wrap:balance;text-shadow:0 2px 14px #000,0 0 3px #000}
 #iwatch{position:absolute;z-index:2;top:37%;left:50%;width:min(35vh,56vw);transform:translate(-50%,-50%);opacity:0;transition:opacity 1.2s}
@@ -147,12 +150,16 @@ header.top{flex:none;display:flex;align-items:center;gap:16px;padding:0 0 10px;b
 #scene{position:absolute;inset:0}
 #scene svg{width:100%;height:100%;display:block;font-family:var(--font-display)}
 .hot{cursor:pointer;transition:filter .25s}
+.hot:focus{outline:none}
 .hot:hover,.hot:focus-visible{filter:drop-shadow(0 0 10px rgba(240,207,126,.95)) brightness(1.15);outline:none}
 #tag{position:absolute;z-index:3;transform:translate(-50%,-100%);white-space:nowrap;background:#0d0907;border:1px solid var(--brass);color:var(--paper);font-size:13px;padding:3px 10px;border-radius:6px;opacity:0;pointer-events:none;transition:opacity .15s}
 #tag.below{transform:translate(-50%,0)}
 #tag.show{opacity:1}
 #card{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(5,4,3,.82);opacity:0;pointer-events:none;transition:opacity .8s;text-align:center;z-index:4}
 #card.show{opacity:1}
+/* 객차 소개가 끝나기 전에는 누를 수 없다 */
+#game.busy #scene,#game.busy #spots,#game.busy #train{pointer-events:none}
+#game.busy #spots{opacity:.45;transition:opacity .3s}
 #card small{font-family:var(--font-type);letter-spacing:.5em;padding-left:.5em;color:var(--brass);font-size:13px}
 #card strong{font-family:var(--font-display);font-weight:800;font-size:clamp(28px,5vw,56px);letter-spacing:.12em;padding-left:.12em;color:var(--gold)}
 
@@ -288,9 +295,9 @@ header.top{flex:none;display:flex;align-items:center;gap:16px;padding:0 0 10px;b
 
 /* ───── 엔딩 ───── */
 /* 엔딩: 시계는 위쪽에 고정, 글자는 바로 아래, 기차는 화면 맨 아래(캔버스) */
-#ending{flex-direction:column;align-items:center;justify-content:flex-start;gap:clamp(14px,3vh,28px);padding:7vh 16px 24px;text-align:center;background:radial-gradient(ellipse at 50% 45%,rgba(8,11,21,.2),rgba(8,11,21,.7) 80%)}
-#ewatch{width:min(26vh,40vw);flex:none}
-.estage{display:grid;width:100%;justify-items:center}
+#ending{flex-direction:column;align-items:center;justify-content:center;gap:clamp(10px,2vh,20px);padding:0 16px 6vh;text-align:center;background:radial-gradient(ellipse at 50% 45%,rgba(8,11,21,.2),rgba(8,11,21,.7) 80%)}
+#ewatch{width:min(23vh,38vw);flex:none}
+.estage{display:grid;width:100%;justify-items:center;align-items:start;min-height:clamp(150px,24vh,230px)}
 .estage>*{grid-area:1/1}
 #eline{font-family:var(--font-display);font-size:clamp(18px,2.7vw,28px);line-height:1.75;max-width:30em;margin:0;text-wrap:balance;text-shadow:0 2px 14px #000;transition:opacity .8s}
 #eline .kid{display:inline-block;color:#bfe0ff;font-size:1.35em}
@@ -648,3 +655,215 @@ header.top{flex:none;display:flex;align-items:center;gap:16px;padding:0 0 10px;b
   }
 }
 
+
+/* =========================================
+   윤정의 사진 — 빈티지 폴라로이드 디자인
+========================================= */
+
+/* 폴라로이드 전체 */
+#flip {
+  width: min(310px, 100%);
+  margin: 14px auto 20px;
+  perspective: 1200px;
+  filter: drop-shadow(
+    0 15px 20px rgba(37, 22, 12, .28)
+  );
+}
+
+/* 기존 뒤집기 애니메이션 유지 */
+#flip > div {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  transform-style: preserve-3d;
+  transition: transform .8s
+    cubic-bezier(.25, .75, .25, 1);
+}
+
+/* 사진 앞면 */
+#flip .f {
+  position: absolute;
+  inset: 0;
+
+  padding: 14px 14px 58px;
+
+  background:
+    linear-gradient(
+      140deg,
+      #fffdf5 0%,
+      #f4eedd 55%,
+      #e6dcc5 100%
+    );
+
+  border: 1px solid #d4c6ac;
+
+  box-shadow:
+    inset 0 0 18px rgba(110, 77, 40, .09),
+    0 2px 4px rgba(0, 0, 0, .18);
+
+  backface-visibility: hidden;
+  overflow: hidden;
+}
+
+/* 윤정의 SVG 사진 */
+#flip .f > svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+
+  filter:
+    sepia(.12)
+    saturate(.83)
+    contrast(.96)
+    brightness(1.03);
+
+  box-shadow:
+    inset 0 0 15px rgba(0, 0, 0, .16),
+    0 0 0 1px rgba(77, 54, 36, .2);
+}
+
+/* 사진 위에 비치는 은은한 광택 */
+#flip .f::before {
+  content: "";
+  position: absolute;
+
+  top: 14px;
+  left: 14px;
+  right: 14px;
+  aspect-ratio: 1 / 1;
+
+  background:
+    linear-gradient(
+      125deg,
+      rgba(255, 255, 255, .24) 0%,
+      transparent 32%,
+      transparent 64%,
+      rgba(255, 255, 255, .09) 100%
+    );
+
+  box-shadow:
+    inset 0 0 25px rgba(39, 25, 13, .15);
+
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* 폴라로이드 하단 손글씨 */
+#flip .f::after {
+  content: "1985. 04 · 새벽역";
+
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 11px;
+
+  text-align: center;
+
+  font-family: var(--font-hand);
+  font-size: 28px;
+  color: #62513d;
+
+  transform: rotate(-2deg);
+  letter-spacing: .025em;
+}
+
+/* 사진 뒷면 */
+#flip .bk {
+  position: absolute;
+  inset: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 50px 27px 36px;
+
+  background:
+    repeating-linear-gradient(
+      180deg,
+      transparent 0px,
+      transparent 29px,
+      rgba(132, 100, 67, .10) 30px
+    ),
+    linear-gradient(
+      140deg,
+      #f4ebd5,
+      #e7d8b8
+    );
+
+  color: #493a2d;
+  font-family: var(--font-hand);
+  font-size: 27px;
+  line-height: 1.55;
+
+  border: 1px solid #c9b694;
+
+  box-shadow:
+    inset 0 0 35px rgba(112, 83, 48, .14);
+
+  transform: rotateY(180deg);
+  backface-visibility: hidden;
+}
+
+/* 뒷면 상단의 작은 기록 */
+#flip .bk::before {
+  content: "1985 · 새벽역";
+
+  position: absolute;
+  top: 19px;
+  left: 22px;
+
+  font-family: var(--font-type);
+  font-size: 12px;
+  color: #8b7255;
+  letter-spacing: .08em;
+}
+
+/* 뒷면 아래쪽 작은 장식선 */
+#flip .bk::after {
+  content: "";
+  position: absolute;
+
+  bottom: 22px;
+  left: 25%;
+  right: 25%;
+
+  height: 1px;
+  background: rgba(116, 87, 54, .28);
+}
+
+/* 뒤집기 버튼 */
+#flipb {
+  border-radius: 999px;
+  padding: 10px 26px;
+
+  transition:
+    background .2s,
+    transform .2s;
+}
+
+#flipb:hover {
+  transform: translateY(-2px);
+}
+
+/* 모바일 대응 */
+@media (max-width: 520px) {
+  #flip {
+    width: min(270px, 100%);
+  }
+
+  #flip .f::after {
+    font-size: 24px;
+  }
+
+  #flip .bk {
+    font-size: 24px;
+  }
+}
+
+/* 모션 최소화 설정 */
+@media (prefers-reduced-motion: reduce) {
+  #flip > div {
+    transition-duration: .01ms;
+  }
+}
