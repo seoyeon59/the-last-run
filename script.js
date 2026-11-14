@@ -61,6 +61,12 @@ const A={c:null,m:null,mute:false,clk:0,rum:null,
   },
   /* 닫힌 문: 덜컹, 덜컹 */
   locked(){this.noise(.1,170,1.2,.75,'lowpass');this.tone(68,.22,.4,'sine');this.noise(.18,1500,5,.1,'bandpass',.01);this.noise(.1,160,1.2,.6,'lowpass',.2);this.tone(60,.24,.32,'sine',.2);this.noise(.3,2300,8,.06,'bandpass',.22)},
+  /* 다음 칸으로: 미닫이문이 열리고 발걸음이 이어진다 */
+  door(){this.noise(.55,520,1.4,.22,'bandpass');this.noise(.5,2600,2,.035,'bandpass',.05);this.tone(84,.28,.34,'sine',.5);this.noise(.08,1900,5,.13,'bandpass',.52);[.85,1.2,1.55].forEach((w,i)=>{this.noise(.07,170,1,.3-i*.06,'lowpass',w);this.tone(70,.1,.12-i*.02,'sine',w)})},
+  /* 단서를 집어 들 때: 종이 스치는 소리 */
+  paper(){this.noise(.16,4200,1,.06,'highpass');this.noise(.12,2400,2,.045,'bandpass',.09);this.noise(.1,5200,1,.035,'highpass',.2)},
+  /* 물건을 살펴볼 때: 낮은 손끝 소리 */
+  tap(){this.noise(.05,900,3,.12,'bandpass');this.tone(196,.25,.035,'sine',.01)},
   leverPull(){this.noise(1.1,450,4,.16,'bandpass');this.tone(52,1.1,.14,'sawtooth',0,.1);this.noise(1,2400,3,.04,'bandpass',.05)},
   clunk(){this.noise(.16,140,1,.9,'lowpass');this.tone(44,.5,.55,'sine');this.noise(.12,1800,6,.14,'bandpass',.01);this.noise(1.6,3200,.8,.06,'highpass',.15)},
   /* 잔잔한 빗소리 (필터를 거친 잡음) */
@@ -613,7 +619,7 @@ const DOCS=['diary1','diary3','diary4'];
 const has=id=>S.inv.includes(id);
 const partCount=()=>S.inv.filter(i=>ITEMS[i].part).length;
 function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('show'),2400)}
-function say(t){const e=$('#say');e.textContent=t}
+function say(t){const e=$('#say');e.textContent=t;e.classList.remove('in');void e.offsetWidth;e.classList.add('in')}
 function addItem(id,quiet){if(has(id))return;S.inv.push(id);renderSide(id);if(!quiet){A.get();toast((DOCS.includes(id)?'기관사의 일기 · ':'소지품 획득 · ')+ITEMS[id].n)}}
 function renderSide(newId){
   const inv=S.inv.filter(i=>!DOCS.includes(i)),docs=S.inv.filter(i=>DOCS.includes(i));
@@ -681,6 +687,10 @@ function curtain(x,c){return '<path d="M'+(x-16)+' 196h60q-6 120 -44 150q20 60 -
 function seat(x,w,c){return '<g><rect x="'+x+'" y="512" width="'+w+'" height="150" rx="18" fill="'+c+'"/><rect x="'+x+'" y="512" width="'+w+'" height="150" rx="18" fill="url(#pDia)"/><rect x="'+(x-8)+'" y="650" width="'+(w+16)+'" height="46" rx="10" fill="'+c+'"/><rect x="'+(x-8)+'" y="650" width="'+(w+16)+'" height="46" rx="10" fill="#000" opacity=".2"/><rect x="'+(x-12)+'" y="690" width="'+(w+24)+'" height="34" fill="#2a160d"/><rect x="'+(x-12)+'" y="690" width="'+(w+24)+'" height="5" fill="url(#gBrass)"/><rect x="'+(x-6)+'" y="506" width="'+(w+12)+'" height="10" rx="5" fill="url(#gBrass)"/></g>'}
 function door(to,open){return '<g class="hot" data-id="door" tabindex="0" role="button" aria-label="'+to+'로 가는 문" transform="translate(1344 0)"><rect x="56" y="186" width="188" height="540" rx="8" fill="#1c0f08"/><rect x="66" y="196" width="168" height="530" rx="4" fill="'+(open?'#7a4a2b':'#4a2a1a')+'"/><rect x="66" y="196" width="168" height="530" fill="url(#gWood)"/><rect x="92" y="230" width="116" height="170" rx="58" fill="'+(open?'#ffd98a':'#0a0f1c')+'" stroke="url(#gBrass)" stroke-width="6"/>'+(open?'<circle cx="150" cy="315" r="130" fill="url(#gLamp)"/>':'')+'<rect x="92" y="440" width="116" height="110" rx="4" fill="none" stroke="#2a160d" stroke-width="4"/><rect x="92" y="574" width="116" height="110" rx="4" fill="none" stroke="#2a160d" stroke-width="4"/><circle cx="216" cy="470" r="10" fill="url(#gBrass)"/><rect x="88" y="140" width="124" height="38" rx="4" fill="#120c09" stroke="url(#gBrass)" stroke-width="2"/><text x="150" y="166" text-anchor="middle" font-size="19" font-weight="800" fill="#f0cf7e">'+to+' ▶</text></g>'}
 function lamps(xs){return xs.map(x=>'<circle cx="'+x+'" cy="118" r="150" fill="url(#gLamp)" opacity=".55"/><path d="M'+(x-34)+' 96h68l-12 26h-44Z" fill="url(#gBrass)"/><ellipse cx="'+x+'" cy="124" rx="24" ry="12" fill="#fff0c2"/>').join('')}
+/* 깨진 회중시계의 금빛 파편: 모든 칸의 공중에 멈춰 있다 */
+function shards(seed,n){const r=mul(seed),cs=['#f0cf7e','#fff3cf','#c79a4b','#e9c46a'];let s='<g class="shards" pointer-events="none">';
+  for(let i=0;i<(n||26);i++){const x=40+r()*1520,y=150+r()*520,z=2.5+r()*5,a=r()*360;s+='<path class="shard" style="animation-delay:-'+(r()*6).toFixed(2)+'s" transform="translate('+x.toFixed(0)+' '+y.toFixed(0)+') rotate('+a.toFixed(0)+')" d="M'+(-z).toFixed(1)+' '+(-z*.4).toFixed(1)+'L'+z.toFixed(1)+' 0L'+(-z*.3).toFixed(1)+' '+(z*.8).toFixed(1)+'Z" fill="'+cs[i%4]+'"/>'}
+  return s+'</g>'}
 function shell(c,body){
   return '<svg viewBox="0 0 1600 900" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="'+c.label+'">'+DEFS
   +'<rect width="1600" height="900" fill="'+c.wall+'"/>'
@@ -689,7 +699,7 @@ function shell(c,body){
   +'<rect y="596" width="1600" height="134" fill="'+c.dado+'"/><rect y="592" width="1600" height="8" fill="url(#gBrass)"/>'
   +Array.from({length:8},(_,i)=>'<rect x="'+(20+i*200)+'" y="614" width="160" height="96" rx="4" fill="none" stroke="#000" stroke-opacity=".3" stroke-width="3"/>').join('')
   +'<rect y="726" width="1600" height="174" fill="'+c.floor+'"/><rect y="726" width="1600" height="174" fill="url(#pRug)"/><rect y="726" width="1600" height="70" fill="url(#gFloor)"/>'
-  +lamps(c.lamps||[420,800,1180])+body+'</svg>';
+  +lamps(c.lamps||[420,800,1180])+body+shards([...c.label].reduce((a,ch)=>a+ch.charCodeAt(0),0))+'</svg>';
 }
 const T4={label:'4호차 객실',wall:'#5a3320',ceil:'#d9c9a3',trim:'#3b2115',dado:'#3b2115',floor:'#4a1719'};
 const SCENES={
@@ -730,13 +740,19 @@ const SCENES={
  ),
  3:()=>shell({label:'3호차 식당칸',wall:'#6b1d1f',ceil:'#e2d2ac',trim:'#3a0e10',dado:'#4a2a1a',floor:'#1d3b3c',lamps:[455,845,1235]},
    door('2호차',S.flags.reg&&S.flags.mbox)
-  +win(330,rainWin(31,250,255))+win(720,rainWin(32,250,255))+win(1110,rainWin(33,250,255))
+  +curtain(330,'#4a1214')+win(330,rainWin(31,250,255))+curtain(720,'#4a1214')+win(720,rainWin(32,250,255))+curtain(1110,'#4a1214')+win(1110,rainWin(33,250,255))
   // 메뉴판
   +'<g class="hot" data-id="menu" tabindex="0" role="button" aria-label="메뉴판"><rect x="60" y="206" width="184" height="150" rx="4" fill="#5a3320" stroke="url(#gBrass)" stroke-width="3"/><rect x="70" y="216" width="164" height="130" fill="#1d241f"/><text x="152" y="241" text-anchor="middle" font-size="17" fill="#e8e2cf" font-family="Nanum Pen Script,cursive">MENU</text><path d="M84 252h136" stroke="#e8e2cf" stroke-width="1" opacity=".4"/><path d="M84 272h60M84 296h78M84 320h50" stroke="#e8e2cf" stroke-width="2.4" opacity=".75"/><path d="M152 272h26M170 296h8M142 320h36" stroke="#e8e2cf" stroke-width="1.2" stroke-dasharray="2 4" opacity=".45"/><path d="M186 272h34M186 296h34M186 320h34" stroke="#e8e2cf" stroke-width="2.4" opacity=".75"/></g>'
   // 식탁
-  +[330,720,1110].map(x=>'<g><rect x="'+(x+110)+'" y="500" width="8" height="70" fill="url(#gBrass)"/><path d="M'+(x+84)+' 500h60l-14 -40h-32Z" fill="#f2d7a0"/><circle cx="'+(x+114)+'" cy="486" r="90" fill="url(#gLamp)" opacity=".8"/><path d="M'+(x-30)+' 580h310l26 130h-362Z" fill="#f2ece0"/><path d="M'+(x-30)+' 580h310l6 30h-322Z" fill="#fff" opacity=".5"/><path d="M'+(x-56)+' 710h362v14h-362Z" fill="#cfc6b4"/></g>').join('')
+  +[330,720,1110].map(x=>'<g>'+[-6,186].map(o=>'<rect x="'+(x+o)+'" y="498" width="74" height="96" rx="12" fill="#3a0e10"/><rect x="'+(x+o)+'" y="498" width="74" height="96" rx="12" fill="url(#pDia)"/><rect x="'+(x+o+6)+'" y="494" width="62" height="8" rx="4" fill="url(#gBrass)"/>').join('')+'<rect x="'+(x+110)+'" y="500" width="8" height="70" fill="url(#gBrass)"/><path d="M'+(x+84)+' 500h60l-14 -40h-32Z" fill="#f2d7a0"/><circle cx="'+(x+114)+'" cy="486" r="90" fill="url(#gLamp)" opacity=".8"/><path d="M'+(x-30)+' 580h310l26 130h-362Z" fill="#f2ece0"/><path d="M'+(x-30)+' 580h310l6 30h-322Z" fill="#fff" opacity=".5"/><path d="M'+(x-56)+' 710h362v14h-362Z" fill="#cfc6b4"/></g>').join('')
   // 영수증
   +'<g class="hot" data-id="receipt" tabindex="0" role="button" aria-label="식탁 위 영수증"><path d="M380 590h62v70l-10 -6l-10 6l-11 -6l-10 6l-11 -6l-10 6Z" fill="#fffdf6" stroke="#8d7a5c" transform="rotate(-8 410 620)"/><path d="M388 606h44M388 620h44M388 634h30" stroke="#6b4a2c" stroke-width="2.5" transform="rotate(-8 410 620)"/><ellipse cx="520" cy="622" rx="34" ry="10" fill="#d8cdb6"/><path d="M498 600h44v18q-22 14 -44 0Z" fill="#fff"/></g>'
+  // 첫 식탁: 두 번째 커피잔과 조각 케이크 (두 사람이 앉았던 자리)
+  +'<g pointer-events="none"><ellipse cx="470" cy="676" rx="34" ry="10" fill="#d8cdb6"/><path d="M448 654h44v18q-22 14 -44 0Z" fill="#fff"/><ellipse cx="470" cy="655" rx="20" ry="4" fill="#4a2a1a"/><path d="M492 658q12 0 12 7q0 7 -12 7" fill="none" stroke="#fff" stroke-width="3"/>'
+   +'<path d="M464 644q-5 -9 0 -16q5 -8 0 -16M476 644q-5 -9 0 -16q5 -8 0 -16" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".35"/>'
+   +'<ellipse cx="572" cy="682" rx="34" ry="9" fill="#e9e2d0"/><path d="M552 676l36 -7v-15l-36 7Z" fill="#f3d9a4"/><path d="M552 661l36 -7l-13 -6l-33 8Z" fill="#7a3b2a"/><path d="M552 668l36 -7" stroke="#fff" stroke-width="2" opacity=".7"/><path d="M596 690l22 -5" stroke="#b9b3a4" stroke-width="3" stroke-linecap="round"/></g>'
+  // 셋째 식탁: 손대지 않은 상차림
+  +'<g pointer-events="none">'+[1170,1330].map(x=>'<ellipse cx="'+x+'" cy="656" rx="42" ry="12" fill="#e9e2d0"/><ellipse cx="'+x+'" cy="655" rx="28" ry="7" fill="#f8f4ea"/><path d="M'+(x-56)+' 648v22M'+(x+56)+' 648v22" stroke="#b9b3a4" stroke-width="3" stroke-linecap="round"/><path d="M'+(x+30)+' 606q0 16 10 18v12M'+(x+50)+' 606q0 16 -10 18M'+(x+32)+' 637h16" fill="none" stroke="#fff" stroke-width="2" opacity=".6"/>').join('')+'</g>'
   // 오르골
   +'<g class="hot" data-id="musicbox" tabindex="0" role="button" aria-label="오르골"><ellipse cx="846" cy="652" rx="78" ry="14" fill="#e9e2d0"/><rect x="786" y="596" width="120" height="52" rx="8" fill="#5a2a3a"/><rect x="786" y="596" width="120" height="52" rx="8" fill="url(#gWood)"/><rect x="786" y="590" width="120" height="14" rx="6" fill="url(#gBrass)"/>'+(S.flags.mbox?'<path d="M790 592l14 -64h92l14 64Z" fill="#3a1826" stroke="url(#gBrass)" stroke-width="2"/><circle cx="846" cy="566" r="12" fill="#f0cf7e" opacity=".5"/>':'')+'<circle cx="812" cy="624" r="7" fill="#c62f2b"/><circle cx="834" cy="624" r="7" fill="#3f9a56"/><circle cx="858" cy="624" r="7" fill="#f2c230"/><circle cx="880" cy="624" r="7" fill="#2d5fa8"/><path d="M906 618h16v-12" fill="none" stroke="url(#gBrass)" stroke-width="5"/></g>'
   // 계산대
@@ -749,6 +765,8 @@ const SCENES={
   // 달력
   +'<g class="hot" data-id="calendar" tabindex="0" role="button" aria-label="벽 달력" transform="translate(-537 44)"><rect x="604" y="250" width="96" height="124" fill="#f6f1e4" stroke="#2a1c12"/><rect x="604" y="250" width="96" height="30" fill="#6b1d1f"/><text x="652" y="272" text-anchor="middle" font-size="18" font-weight="800" fill="#fde9c0">3월</text>'+Array.from({length:20},(_,i)=>'<rect x="'+(612+(i%5)*17)+'" y="'+(290+Math.floor(i/5)*19)+'" width="11" height="11" fill="#2a1c12" opacity=".22"/>').join('')+'<circle cx="634.5" cy="295.5" r="9" fill="none" stroke="#b3261e" stroke-width="2.5"/><circle cx="651.5" cy="333.5" r="9" fill="none" stroke="#b3261e" stroke-width="2.5"/><circle cx="668.5" cy="352.5" r="9" fill="none" stroke="#b3261e" stroke-width="2.5"/><circle cx="652" cy="246" r="5" fill="url(#gBrass)"/></g>'
   +seat(300,310,'#3c3566')+seat(690,310,'#3c3566')+seat(1080,310,'#3c3566')
+  // 불 꺼진 객실에 떨어지는 달빛
+  +'<g pointer-events="none">'+[330,720,1110].map(x=>'<path d="M'+x+' 486h250l-110 414h-250Z" fill="#9db8e8" opacity=".06"/><path d="M'+(x-110)+' 900l48 -180h250l-48 180Z" fill="#9db8e8" opacity=".07"/>').join('')+'</g>'
   // 그림책
   +'<g class="hot" data-id="book" tabindex="0" role="button" aria-label="좌석 위 그림책"><path d="M400 640l72 -12l72 12v40l-72 -10l-72 10Z" fill="#f4eedd" stroke="#2a1c12"/><path d="M472 628v42" stroke="#2a1c12"/><path d="M414 648l44 -7M414 660l44 -7" stroke="#2b5b8a" stroke-width="3"/><path transform="translate(508 652) scale(.8)" d="M0 -11Q1.5 -1.5 11 0Q1.5 1.5 0 11Q-1.5 1.5 -11 0Q-1.5 -1.5 0 -11Z" fill="#f2c230"/></g>'
   // 트렁크
@@ -764,6 +782,13 @@ const SCENES={
   // 운행 안내문
   +'<g class="hot" data-id="notice" tabindex="0" role="button" aria-label="운행 안내문"><rect x="410" y="220" width="170" height="230" fill="#f6f1e4" stroke="#2a1c12" stroke-width="2"/><rect x="410" y="220" width="170" height="40" fill="#6b1d1f"/><text x="495" y="247" text-anchor="middle" font-size="19" font-weight="800" fill="#fde9c0">운행 안내</text><path d="M426 284h138M426 304h138M426 324h100M426 360h138M426 380h138M426 400h80" stroke="#2a1c12" stroke-width="3" opacity=".55"/><circle cx="495" cy="216" r="6" fill="#b3261e"/></g>'
   +win(660,rainWin(41,250,255))
+  // 11시 59분에 멈춘 벽시계
+  +'<g pointer-events="none"><circle cx="1266" cy="300" r="46" fill="url(#gBrass)"/><circle cx="1266" cy="300" r="38" fill="#efe2c4"/>'+Array.from({length:12},(_,i)=>{const a=i*30*Math.PI/180;return '<line x1="'+(1266+30*Math.sin(a)).toFixed(1)+'" y1="'+(300-30*Math.cos(a)).toFixed(1)+'" x2="'+(1266+35*Math.sin(a)).toFixed(1)+'" y2="'+(300-35*Math.cos(a)).toFixed(1)+'" stroke="#2a1c12" stroke-width="2"/>'}).join('')+'<line x1="1266" y1="300" x2="1265.8" y2="280" stroke="#2a1c12" stroke-width="4" stroke-linecap="round"/><line x1="1266" y1="300" x2="1263" y2="270" stroke="#2a1c12" stroke-width="2.5" stroke-linecap="round"/><circle cx="1266" cy="300" r="3.5" fill="#2a1c12"/></g>'
+  // 창 아래 벤치: 꺼진 신호등, 보온병, 승무원 모자
+  +'<g pointer-events="none"><rect x="640" y="650" width="300" height="16" rx="3" fill="#5a3320"/><rect x="660" y="666" width="14" height="60" fill="#3b2115"/><rect x="906" y="666" width="14" height="60" fill="#3b2115"/>'
+   +'<path d="M690 600q22 -24 44 0" fill="none" stroke="#2a160d" stroke-width="5"/><rect x="688" y="600" width="48" height="50" rx="6" fill="#232b22"/><rect x="696" y="608" width="32" height="34" rx="4" fill="#4a5a52"/><rect x="684" y="596" width="56" height="8" rx="3" fill="url(#gBrass)"/>'
+   +'<rect x="770" y="590" width="30" height="60" rx="6" fill="#6b1d1f"/><rect x="774" y="578" width="22" height="16" rx="4" fill="#b9b3a4"/>'
+   +'<path d="M836 650q0 -30 40 -30q40 0 40 30Z" fill="#141c2b"/><rect x="828" y="644" width="96" height="8" rx="4" fill="#0c1220"/><rect x="840" y="636" width="72" height="6" fill="url(#gBrass)"/></g>'
   // 기록 보관함
   +'<g class="hot" data-id="cabinet" tabindex="0" role="button" aria-label="기록 보관함"><rect x="990" y="330" width="190" height="396" rx="6" fill="#55604f"/><rect x="990" y="330" width="190" height="396" rx="6" fill="url(#gWood)"/>'+[0,1,2].map(i=>'<rect x="1004" y="'+(346+i*126)+'" width="162" height="112" rx="4" fill="'+(S.flags.cab&&i===0?'#161b15':'#48523f')+'" stroke="#232b22" stroke-width="3"/><rect x="1060" y="'+(388+i*126)+'" width="50" height="12" rx="6" fill="url(#gBrass)"/>').join('')+'<rect x="1050" y="352" width="70" height="26" rx="3" fill="#f6f1e4"/><text x="1085" y="371" text-anchor="middle" font-size="15" font-weight="800" fill="#2a1c12">운행 기록</text></g>'
   // 물품 보관함
@@ -782,11 +807,23 @@ const SCENES={
   +'<g class="hot" data-id="gauges" tabindex="0" role="button" aria-label="계기판"><path d="M620 300h520M700 300v-130h360v130M880 170v-80" fill="none" stroke="#7a5524" stroke-width="14"/>'+[[660,300,54],[800,210,44],[960,210,44],[1100,300,54],[880,330,66]].map((g,i)=>'<circle cx="'+g[0]+'" cy="'+g[1]+'" r="'+g[2]+'" fill="url(#gBrass)"/><circle cx="'+g[0]+'" cy="'+g[1]+'" r="'+(g[2]-9)+'" fill="#efe2c4"/>'+Array.from({length:9},(_,k)=>{const a=(-120+k*30)*Math.PI/180;return '<line x1="'+(g[0]+(g[2]-14)*Math.sin(a)).toFixed(1)+'" y1="'+(g[1]-(g[2]-14)*Math.cos(a)).toFixed(1)+'" x2="'+(g[0]+(g[2]-20)*Math.sin(a)).toFixed(1)+'" y2="'+(g[1]-(g[2]-20)*Math.cos(a)).toFixed(1)+'" stroke="#2a1c12" stroke-width="2"/>'}).join('')+'<line x1="'+g[0]+'" y1="'+g[1]+'" x2="'+(g[0]+(g[2]-18)*Math.sin((i*47-60)*Math.PI/180)).toFixed(1)+'" y2="'+(g[1]-(g[2]-18)*Math.cos((i*47-60)*Math.PI/180)).toFixed(1)+'" stroke="#b3261e" stroke-width="3"/><circle cx="'+g[0]+'" cy="'+g[1]+'" r="5" fill="#2a1c12"/>').join('')+'</g>'
   // 화실
   +'<circle cx="880" cy="760" r="260" fill="url(#gFire)" opacity=".5"/><path d="M770 726v-110q110 -90 220 0v110Z" fill="#0b0b0a" stroke="#3d4a3c" stroke-width="10"/><path d="M800 726v-90q80 -66 160 0v90Z" fill="url(#gFire)"/><path d="M830 726q10 -70 34 -50q6 -50 30 -10q20 -30 30 60Z" fill="#ffe6a8" opacity=".8"/>'
+  // 배관과 밸브
+  +'<g pointer-events="none"><path d="M1180 200h290M1240 200v170M1400 200v100M430 96h1060" fill="none" stroke="#2f3a30" stroke-width="16" stroke-linecap="round"/><path d="M1180 196h290M430 92h1060" fill="none" stroke="#56655a" stroke-width="3" opacity=".6"/>'
+   +[1210,1320,1440,560,760,1000].map((x,i)=>'<rect x="'+(x-6)+'" y="'+(i<3?186:82)+'" width="12" height="28" rx="3" fill="#7a5524"/>').join('')
+   +'<circle cx="1240" cy="392" r="28" fill="none" stroke="#8b1c1c" stroke-width="7"/><path d="M1212 392h56M1240 364v56M1220 372l40 40M1260 372l-40 40" stroke="#8b1c1c" stroke-width="4"/><circle cx="1240" cy="392" r="6" fill="#c79a4b"/>'
+   +'<circle cx="1400" cy="326" r="28" fill="#efe2c4" stroke="url(#gBrass)" stroke-width="6"/><line x1="1400" y1="326" x2="1386" y2="312" stroke="#b3261e" stroke-width="3" stroke-linecap="round"/><circle cx="1400" cy="326" r="3" fill="#2a1c12"/>'
+   // 공중에 멈춘 증기
+   +[[960,60,46],[1010,40,34],[1060,64,26],[1330,150,30],[1368,132,22]].map(q=>'<circle cx="'+q[0]+'" cy="'+q[1]+'" r="'+q[2]+'" fill="#cfd8e0" opacity=".07"/>').join('')
+   // 석탄 더미와 삽
+   +'<path d="M1006 726q16 -46 58 -42q28 -30 62 2q24 6 30 40Z" fill="#070706"/><path d="M1030 706l16 -10l14 8M1084 692l18 -8l12 10M1112 712l14 -6" fill="none" stroke="#3a3d3a" stroke-width="3" stroke-linecap="round"/><path d="M1150 724l-34 -150" stroke="#5a3320" stroke-width="9" stroke-linecap="round"/><path d="M1100 566h30l6 18h-42Z" fill="#5a3320"/><path d="M1136 724h30l8 -34h-46Z" fill="#6d7570"/>'
+   // 공구 상자
+   +'<rect x="110" y="672" width="170" height="54" rx="5" fill="#5a1f1f"/><rect x="110" y="672" width="170" height="12" rx="5" fill="#7a2a2c"/><path d="M170 672q0 -22 25 -22q25 0 25 22" fill="none" stroke="#2a160d" stroke-width="6"/><rect x="186" y="690" width="18" height="14" rx="2" fill="url(#gBrass)"/></g>'
   // 작업대와 시계
   +'<rect x="1160" y="560" width="300" height="20" fill="#5a3320"/><rect x="1180" y="580" width="16" height="146" fill="#3b2115"/><rect x="1424" y="580" width="16" height="146" fill="#3b2115"/>'
   +'<g class="hot" data-id="bench" tabindex="0" role="button" aria-label="작업대 위 회중시계 케이스"><path d="M1226 560l20 -16h130l20 16Z" fill="#6b1d1f"/><circle cx="1310" cy="516" r="40" fill="url(#gBrass)"/><circle cx="1310" cy="516" r="31" fill="'+(S.flags.fixed?'#efe2c4':'#120c09')+'"/>'+(S.flags.fixed?'<line x1="1310" y1="516" x2="1310" y2="494" stroke="#2a1c12" stroke-width="3"/><line x1="1310" y1="516" x2="1307" y2="490" stroke="#2a1c12" stroke-width="2"/><circle cx="1310" cy="516" r="60" fill="url(#gLamp)"/>':'<circle cx="1310" cy="516" r="22" fill="none" stroke="#6e4a1c" stroke-dasharray="3 4"/>')+'<circle cx="1310" cy="470" r="8" fill="none" stroke="url(#gBrass)" stroke-width="4"/></g>'
   // 출발 레버
   +'<g class="hot" data-id="lever" tabindex="0" role="button" aria-label="출발 레버"><rect x="1490" y="300" width="70" height="330" rx="10" fill="#0b0b0a" stroke="#3d4a3c" stroke-width="6"/><rect x="1518" y="330" width="14" height="270" rx="7" fill="#232b22"/><g class="lvh"><rect x="1519" y="352" width="12" height="52" fill="#8d9a86"/><rect x="1470" y="340" width="110" height="26" rx="13" fill="'+(S.flags.given?'#e0362c':'#5a2420')+'"/>'+(S.flags.given?'<circle cx="1525" cy="353" r="90" fill="url(#gLamp)"/>':'')+'</g><text x="1525" y="290" text-anchor="middle" font-size="19" font-weight="800" fill="'+(S.flags.given?'#f0cf7e':'#6e6a55')+'">출발</text></g>'
+  +shards(77,30)
   +'</svg>'
 };
 const CARS={
@@ -812,6 +849,7 @@ const carDone=c=>locksOf(c).every(m=>m.done());
 function spotState(c,m){if(m.type==='lock')return m.done()?'solved':'lock';if(m.type==='door'&&m.done())return 'solved';return S.seen[c+':'+m.id]?'seen':''}
 function openSpot(c,id){
   const m=meta(c,id);if(!m)return;if($('#game').classList.contains('busy')&&c===S.car)return;A.init();const k=c+':'+id;S.seen[k]=1;
+  if(m.type==='clue')A.paper();else if(m.type==='look')A.tap();
   if(m.type==='clue'&&!S.notes.includes(k)){S.notes.push(k);setTimeout(()=>toast('단서 수첩에 기록 · '+m.label),50)}
   curLabel=m.label;const f=ON[c]&&ON[c][id];if(f)f();
   if(c===S.car&&$('#game').classList.contains('on'))renderSpots();renderSide();
@@ -836,7 +874,9 @@ let busyRun=0;
 function setBusy(on){$('#game').classList.toggle('busy',on)}
 async function enterCar(c){
   const run=++busyRun;setBusy(true);
+  if(S.started&&S.car!==c)A.door();
   S.car=c;S.reached=Math.min(S.reached,c);closeModal();render();
+  {const sc=$('#scene');sc.classList.remove('enter');void sc.offsetWidth;sc.classList.add('enter')}
   try{$('#game').scrollTo({top:0,behavior:REDUCED?'auto':'smooth'})}catch(e){}
   const k=$('#card');k.firstElementChild.textContent=CARS[c].n;k.lastElementChild.textContent=CARS[c].sub;k.classList.add('show');
   say({4:'객실 안의 모든 것이 멈춰 있다. 눈에 띄는 것을 눌러 살펴보자.',3:'식당칸이다. 식탁 위에 누군가의 흔적이 남아 있다.',2:'조명이 꺼진 객실. 창밖으로 별이 또렷하게 보인다.',1:'승무원이 쓰는 칸이다. 기관실로 이어지는 철문이 보인다.',0:'기관실. 기관사가 창밖을 바라본 채 멈춰 있다.'}[c]);

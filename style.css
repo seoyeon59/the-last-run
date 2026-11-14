@@ -884,3 +884,39 @@ header.top{flex:none;display:flex;align-items:center;gap:16px;padding:0 0 10px;b
     transition-duration: .01ms;
   }
 }
+
+/* =========================================
+   디테일: 멈춘 금빛 파편, 장면 전환, 내레이션
+========================================= */
+
+/* 공중에 멈춘 회중시계 파편이 아주 느리게 반짝인다 */
+.shard {
+  opacity: .55;
+  filter: drop-shadow(0 0 3px rgba(255, 226, 154, .8));
+  animation: shardTw 6s ease-in-out infinite;
+}
+
+@keyframes shardTw {
+  0%, 100% { opacity: .25; }
+  50% { opacity: .85; }
+}
+
+/* 새 객차에 들어설 때 장면이 스며들 듯 나타난다 */
+#scene.enter {
+  animation: sceneIn 1.4s ease both;
+}
+
+@keyframes sceneIn {
+  from { opacity: 0; filter: blur(8px) brightness(.6); }
+  to { opacity: 1; filter: none; }
+}
+
+/* 내레이션이 바뀔 때 부드럽게 떠오른다 */
+#say.in {
+  animation: sayIn .55s ease both;
+}
+
+@keyframes sayIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: none; }
+}
