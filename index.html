@@ -27,10 +27,10 @@
       </dl>
     </div>
     <div class="stub">
-      <button id="board" type="button">개찰하고<br>탑승하기</button>
-      <span>ADMIT ONE</span>
+      <button id="board" type="button">탑승하기</button>
     </div>
   </div>
+  <button id="sndOn" class="snd" type="button" aria-pressed="false"><span class="ic" aria-hidden="true">♪</span><span id="sndTxt">소리 켜기 · 빗소리 들어보기</span></button>
   <p class="note">소리를 켜고 플레이하면 더 좋습니다. 진행 시간은 15분 안팎입니다.</p>
 </section>
 
@@ -48,8 +48,9 @@
   <header class="top">
    <div class="logo">
     <svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="6" r="3.5" fill="none" stroke="#c79a4b" stroke-width="2"/><circle cx="20" cy="23" r="14" fill="none" stroke="#c79a4b" stroke-width="2.4"/><path d="M20 14v9l5 3" fill="none" stroke="#f0cf7e" stroke-width="2.2" stroke-linecap="round"/></svg>
-    <div><h1>시간이 멈춘 열차</h1><small>새벽역행 마지막 운행 · 웹 방탈출</small></div>
+    <h1>시간이 멈춘 열차</h1>
    </div>
+   <nav class="train" id="train" aria-label="열차 칸 이동"></nav>
    <div class="tools">
     <div class="clock" role="img" aria-label="열차 시각 11시 59분, 멈춤"><span class="s">열차 시각</span><span class="t">11:59</span></div>
     <button class="tbtn" id="bSound" type="button" aria-pressed="true">소리 켜짐</button>
@@ -57,15 +58,13 @@
    </div>
   </header>
 
-  <nav class="train" id="train" aria-label="열차 칸 이동"></nav>
-
   <div class="layout">
    <div class="main">
-    <div class="cartitle"><div><div class="eyebrow" id="eyebrow"></div><h2 id="ctitle"></h2></div><div class="lockcount" id="lockcount"></div></div>
-    <div class="scene" id="sceneWrap"><div id="scene"></div><div id="tag" aria-hidden="true"></div><div id="card"><small></small><strong></strong></div></div>
-    <div class="narr"><p class="goal" id="goal"></p><p id="say" aria-live="polite"></p></div>
-    <div><p class="legend">살펴볼 수 있는 곳 · 노란 네모는 퍼즐, 초록은 푼 퍼즐, 회색은 이미 본 곳</p><div class="spots" id="spots"></div></div>
-    <div id="next"></div>
+    <div class="cartitle"><div class="eyebrow" id="eyebrow"></div><h2 id="ctitle"></h2><div class="lockcount" id="lockcount"></div></div>
+    <p class="goal" id="goal"></p>
+    <div class="stagebox"><div class="scene" id="sceneWrap"><div id="scene"></div><div id="tag" aria-hidden="true"></div><div id="card"><small></small><strong></strong></div></div></div>
+    <div class="narr"><p id="say" aria-live="polite"></p><div id="next"></div></div>
+    <div class="spotsrow"><div class="spots" id="spots"></div><p class="legend"><i class="k puz"></i>퍼즐 <i class="k ok"></i>푼 곳 <i class="k seen"></i>본 곳</p></div>
    </div>
    <aside class="side">
     <section class="box" aria-labelledby="invH"><h3 id="invH">소지품 <small id="parts"></small></h3><div class="pslots" id="pslots"></div><div class="list" id="items"></div></section>
