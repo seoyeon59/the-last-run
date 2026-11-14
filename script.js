@@ -274,7 +274,44 @@ function loop(now){
   else if(FX.mode==='tunnel')drawTunnel(t);
   else if(FX.mode==='land')drawLand(t,{rain:1,moving:true,trainX:h=>W*.3-t*W*.004});
   else if(FX.mode==='cab'){drawCab(t);drawShards(dt)}
-  else if(FX.mode==='end'){const k=clamp(t/30,0,1);drawLand(t,{stars:1+k*3,dawn:t>14,moving:true,low:.9,trainX:h=>W*.34-t*W*.012})}
+
+    /* 엔딩 1단계: 완전히 멈춘 세계 */
+    else if (FX.mode === 'endStill') {
+      drawLand(0, {
+        stars: 1,
+        rain: 2,          // 고정된 빗방울
+        moving: false,    // 증기 및 열차 정지
+        low: .9,
+        trainX: h => W * .34
+      });
+    }
+
+    /* 엔딩 2단계: 빗방울과 별빛이 움직이기 시작 */
+    else if (FX.mode === 'endWake') {
+      drawLand(REDUCED ? 0 : t, {
+        stars: 1,
+        rain: REDUCED ? 2 : 1,
+        moving: false,    // 열차는 아직 정지
+        low: .9,
+        trainX: h => W * .34
+      });
+    }
+
+    /* 엔딩 3단계: 자정이 되어 열차 출발 */
+    else if (FX.mode === 'end') {
+      const motionT = REDUCED ? 0 : t;
+      const k = clamp(motionT / 30, 0, 1);
+
+      drawLand(motionT, {
+        stars: 1 + k * 3,
+        rain: REDUCED ? 2 : 1,
+        dawn: motionT > 14,
+        moving: !REDUCED,
+        low: .9,
+        trainX: h => W * .34 - motionT * W * .012
+      });
+    }
+
   if(FX.flash>0){cx.fillStyle='rgba(214,228,255,'+FX.flash.toFixed(3)+')';cx.fillRect(0,0,W,H);FX.flash=Math.max(0,FX.flash-dt*.55)}
 }
 requestAnimationFrame(loop);
@@ -361,10 +398,37 @@ document.addEventListener('keydown',e=>{
     else if(document.activeElement&&document.activeElement.classList&&document.activeElement.classList.contains('hot')){e.preventDefault();document.activeElement.dispatchEvent(new MouseEvent('click',{bubbles:true}))}
   }
 });
-let rainPref=null;
-function setSnd(on){const b=$('#sndOn');b.setAttribute('aria-pressed',on);$('#sndTxt').textContent=on?'빗소리가 들리나요? · 누르면 끕니다':'소리 켜기 · 빗소리 들어보기'}
-$('#sndOn').addEventListener('click',()=>{A.init();if(!A.c)return;const on=!A.rn;rainPref=on;A.rain(on,1.2);setSnd(on)});
-$('#board').addEventListener('click',()=>{A.init();A.tick();if(rainPref!==false){A.rain(true,2);setSnd(true)}runIntro()});
+let rainPref=true;
+function setSnd(on){
+    const b=$('#sndOn');
+
+    b.setAttribute('aria-pressed',on);
+
+    $('#sndTxt').textContent=on
+        ?'소리 켜짐 · 누르면 끕니다'
+        :'소리 꺼짐 · 누르면 켭니다'
+    }
+
+$('#sndOn').addEventListener('click',()=>{
+    A.init();
+    if(!A.c)return;
+
+    const on = !rainPref;
+    rainPref=on;
+
+    A.rain(on,1.2);
+    setSnd(on)
+});
+
+$('#board').addEventListener('click',()=>{
+    A.init();
+    A.tick();
+
+    if(rainPref!==false){
+        A.rain(true,2);
+        setSnd(true)
+    }runIntro()
+});
 
 /* ═════════ 게임 상태 ═════════ */
 const fresh=()=>({car:4,reached:4,flags:{},inv:[],notes:[],seen:{},hints:{},started:false});
@@ -573,6 +637,7 @@ function render(){
   const c=CARS[S.car];
   $('#eyebrow').textContent=c.n+' · '+c.kind;$('#ctitle').textContent=c.sub;$('#goal').textContent=c.goal;
   $('#train').innerHTML=ORDER.map((k,i)=>{const C=CARS[k],open=k>=S.reached;return (i?'<span class="coupler" aria-hidden="true"></span>':'')+'<button type="button" class="car'+(k===0?' engine':'')+(k===S.car?' current':'')+(open?' lit':'')+(open&&carDone(k)?' done':'')+'" data-car="'+k+'"'+(open?'':' disabled')+' aria-current="'+(k===S.car)+'"><b>'+C.n+'</b><span>'+(open?C.kind:'잠김')+'</span></button>'}).join('');
+  $('#sceneWrap').dataset.car = String(S.car);
   $('#scene').innerHTML=SCENES[S.car]();
   renderSpots();renderSide();
 }
@@ -738,25 +803,215 @@ $('#scene').addEventListener('focusin',e=>{const h=e.target.closest('.hot');if(h
 $('#scene').addEventListener('focusout',hideTag);
 $('#bSound').onclick=e=>{A.init();A.setMute(!A.mute);e.currentTarget.setAttribute('aria-pressed',!A.mute);e.currentTarget.textContent=A.mute?'소리 꺼짐':'소리 켜짐'};
 $('#bReset').onclick=()=>{const b=openModal({k:'처음부터',title:'처음부터 다시 탈까요?',html:'<p>지금까지 푼 퍼즐과 모은 단서, 소지품이 모두 사라집니다.</p><div class="acts"><button class="btn" type="button" id="cfYes">다시 시작</button><button class="btn ghost" type="button" id="cfNo">취소</button></div>'});b.querySelector('#cfYes').onclick=resetAll;b.querySelector('#cfNo').onclick=closeModal};
-function resetAll(){endRun++;A.rumble(false);A.stopPiece(1.2);A.rain(false,.6);rainPref=null;setSnd(false);S=fresh();closeModal();$('#eend').classList.remove('on');$('#eline').innerHTML='';setMode('title');show('title')}
+
+function resetAll(){
+    endRun++;
+
+    A.rumble(false);
+    A.stopPiece(1.2);
+    A.rain(false,.6);
+
+    rainPref=true;
+    setSnd(true);
+
+    S=fresh();
+    closeModal();
+
+    $('#eend').classList.remove('on');
+    $('#eline').innerHTML='';
+    setMode('title');
+    show('title')
+}
 
 /* ═════════ 엔딩 ═════════ */
 let endRun=0;
-async function runEnding(){
-  const run=++endRun;closeModal();show('ending');setMode('end');A.init();A.rain(true,2.5,.3);A.piece();
-  const ew=$('#ewatch'),ln=$('#eline'),ee=$('#eend');ee.classList.remove('on');ew.innerHTML=watchSVG({s:300});ew.style.display='';
-  const sh=ew.querySelector('.sh'),mh=ew.querySelector('.mh'),hh=ew.querySelector('.hh');
-  const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-  const tell=async(h,ms)=>{ln.style.opacity=0;await sleep(600);if(run!==endRun)return;ln.innerHTML=h;ln.style.opacity=1;await sleep(ms)};
-  (async()=>{for(let i=0;i<=10;i++){if(run!==endRun)return;sh.setAttribute('transform','rotate('+(300+i*6)+')');A.tick();if(i===10){mh.setAttribute('transform','rotate(360)');hh.setAttribute('transform','rotate(360)');A.bell();A.bell(1.6);A.bell(3.2)}await sleep(1000)}
-    let s=0;while(run===endRun&&$('#ending').classList.contains('on')){s++;sh.setAttribute('transform','rotate('+(s*6)+')');mh.setAttribute('transform','rotate('+(s*.1)+')');await sleep(1000)}})();
-  await tell('레버를 끝까지 내리자,<br>공중에 멈춰 있던 빗방울이 다시 떨어진다.',4200);
-  await tell('초침이 한 칸, 또 한 칸 움직인다.',4200);
-  if(run!==endRun)return;A.whistle();
-  await tell('2027년 1월 1일, 0시 0분.<br>열차가 다시 달린다.',5200);
-  await tell('창밖의 별이 천천히 자리를 옮긴다.',4200);
-  await tell('<span class="kid">“시간이 흘러야 별도 움직이고,<br>새로운 별도 볼 수 있대요!”</span><small>2호차 그림책 마지막 장의 낙서</small>',6500);
-  if(run!==endRun)return;ln.style.opacity=0;await sleep(900);ln.innerHTML='';ee.classList.add('on');
+
+async function runEnding() {
+  const run = ++endRun;
+
+  closeModal();
+  show('ending');
+
+  const ending = $('#ending');
+  const ew = $('#ewatch');
+  const ln = $('#eline');
+  const ee = $('#eend');
+
+  const sleep = ms =>
+    new Promise(resolve => setTimeout(resolve, ms));
+
+  const alive = () =>
+    run === endRun &&
+    ending.classList.contains('on');
+
+  /* 1. 완전히 멈춘 세상 */
+  ending.dataset.phase = 'still';
+  setMode('endStill');
+
+  A.init();
+  A.rain(false, .6);
+  A.rumble(false);
+  A.stopPiece(.4);
+
+  ee.classList.remove('on');
+  ln.innerHTML = '';
+  ln.style.opacity = 1;
+
+  // 11시 59분 50초에서 시작
+  ew.innerHTML = watchSVG({ s: 300 });
+  ew.style.display = '';
+
+  const sh = ew.querySelector('.sh');
+  const mh = ew.querySelector('.mh');
+  const hh = ew.querySelector('.hh');
+
+  /* 내레이션 전환 함수 */
+  const tell = async (html, duration) => {
+    ln.style.opacity = 0;
+
+    await sleep(600);
+    if (!alive()) return;
+
+    ln.innerHTML = html;
+    ln.style.opacity = 1;
+
+    await sleep(duration);
+  };
+
+  await tell(
+    '출발 레버를 끝까지 내렸다.<br>' +
+    '하지만 열차 안의 모든 것은 아직 멈춰 있다.',
+    1900
+  );
+
+  if (!alive()) return;
+
+  /* 2. 초침이 다시 움직이기 시작 */
+  const midnight = (async () => {
+    for (let i = 1; i <= 10; i++) {
+      await sleep(1000);
+      if (!alive()) return;
+
+      sh.setAttribute(
+        'transform',
+        `rotate(${300 + i * 6})`
+      );
+
+      A.tick();
+
+      // 첫 초침이 움직일 때 세상도 깨어난다
+      if (i === 1) {
+        ending.dataset.phase = 'waking';
+        setMode('endWake');
+
+        // 실제 빗소리도 서서히 시작
+        A.rain(true, 1.5, .32);
+      }
+
+      // 11:59:59 -> 00:00:00
+      if (i === 10) {
+        mh.setAttribute(
+          'transform', 'rotate(360)'
+        );
+        hh.setAttribute(
+          'transform', 'rotate(360)'
+        );
+
+        A.bell();
+        A.bell(1.6);
+        A.bell(3.2);
+      }
+    }
+  })();
+
+  await tell(
+    '똑.<br>' +
+    '회중시계의 초침이 한 칸 움직였다.',
+    3000
+  );
+
+  if (!alive()) return;
+
+  await tell(
+    '공중에 멈춰 있던 빗방울이 떨어지고,<br>' +
+    '창밖의 별빛도 다시 움직이기 시작한다.',
+    3200
+  );
+
+  if (!alive()) return;
+
+  // 자정에 도달할 때까지 기다린다
+  await midnight;
+  if (!alive()) return;
+
+  /* 3. 자정, 다시 달리는 열차 */
+  ending.dataset.phase = 'running';
+  setMode('end');
+
+  // 기적 소리, 바퀴 소리, 엔딩 음악
+  A.whistle();
+  A.rumble(true);
+  A.piece();
+
+  /* 시계는 엔딩 이후에도 계속 움직인다 */
+  const keepClockMoving = async () => {
+    let seconds = 0;
+
+    while (alive()) {
+      await sleep(1000);
+      if (!alive()) return;
+
+      seconds++;
+
+      sh.setAttribute(
+        'transform',
+        `rotate(${seconds * 6})`
+      );
+
+      mh.setAttribute(
+        'transform',
+        `rotate(${seconds * .1})`
+      );
+    }
+  };
+
+  keepClockMoving();
+
+  await tell(
+    '2027년 1월 1일, 0시 0분.<br>' +
+    '열차가 다시 달린다.',
+    4300
+  );
+
+  if (!alive()) return;
+
+  await tell(
+    '창밖의 별들이 천천히 자리를 옮긴다.<br>' +
+    '밤하늘 너머로 새벽빛이 스며든다.',
+    3800
+  );
+
+  if (!alive()) return;
+
+  await tell(
+    '<span class="kid">' +
+    '“시간이 흘러야 별도 움직이고,<br>' +
+    '새로운 별도 볼 수 있대요!”' +
+    '</span>' +
+    '<small>2호차 그림책 마지막 장의 낙서</small>',
+    5500
+  );
+
+  if (!alive()) return;
+
+  /* 4. 마지막 메시지 */
+  ln.style.opacity = 0;
+  await sleep(900);
+
+  if (!alive()) return;
+
+  ln.innerHTML = '';
+  ee.classList.add('on');
 }
 $('#again').onclick=resetAll;
 

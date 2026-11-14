@@ -300,3 +300,351 @@ header.top{flex:none;display:flex;align-items:center;gap:16px;padding:0 0 10px;b
 #eend h2{font-family:var(--font-display);font-weight:800;font-size:clamp(32px,6vw,64px);letter-spacing:.14em;padding-left:.14em;margin:0;background:linear-gradient(180deg,#fffbe8,var(--gold) 50%,#8a6223);-webkit-background-clip:text;background-clip:text;color:transparent}
 #eend p{margin:0;color:#d8c59c;max-width:32em;font-size:15px}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.2s!important}}
+
+
+/* 객실 화면에 은은한 가장자리 그림자와 필름 질감 추가 */
+.scene::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+
+  background:
+    radial-gradient(
+      ellipse at center,
+      transparent 48%,
+      rgba(0, 0, 0, .48) 100%
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent 0px,
+      rgba(255, 240, 200, .013) 1px,
+      transparent 2px,
+      transparent 4px
+    );
+}
+
+/* 발견 가능한 물건에 부드러운 반응 */
+#scene .hot {
+  transition:
+    filter .22s ease,
+    opacity .22s ease;
+}
+
+#scene .hot:hover,
+#scene .hot:focus-visible {
+  filter:
+    drop-shadow(0 0 6px rgba(240,207,126,.55))
+    brightness(1.1);
+}
+
+/* 멈춘 시간: 시각 표시 점멸 제거 */
+#game .clock .t {
+  animation: none;
+}
+
+
+/* =========================================
+   THE LAST RUN — 객차별 분위기 연출
+   기존 style.css 맨 아래에 추가
+========================================= */
+
+/* 조명 레이어와 클릭 가능한 SVG를 분리 */
+#sceneWrap {
+  isolation: isolate;
+}
+
+#sceneWrap #scene {
+  z-index: 0;
+}
+
+/* 조명: 스크린 블렌딩으로 밝은 부분만 강조 */
+#sceneWrap::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: var(--scene-light, transparent);
+  mix-blend-mode: screen;
+  opacity: .92;
+  transition: background .5s ease;
+}
+
+/* 그림자 + 아주 미세한 필름 질감 */
+#sceneWrap::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background:
+    var(--scene-shadow, transparent),
+    repeating-linear-gradient(
+      0deg,
+      transparent 0px,
+      rgba(255, 235, 195, .015) 3px,
+      transparent 4px,
+      transparent 6px
+    );
+}
+
+/* 4호차 — 시간이 멈춘 객실 */
+#sceneWrap[data-car="4"] {
+  --scene-light:
+    radial-gradient(
+      ellipse 23% 37% at 26% 14%,
+      rgba(255, 212, 138, .28),
+      transparent 100%
+    ),
+    radial-gradient(
+      ellipse 22% 36% at 72% 14%,
+      rgba(255, 211, 126, .18),
+      transparent 100%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(135, 166, 210, .10),
+      transparent 60%
+    );
+
+  --scene-shadow:
+    radial-gradient(
+      ellipse at 50% 45%,
+      transparent 38%,
+      rgba(5, 8, 18, .55) 100%
+    ),
+    linear-gradient(
+      0deg,
+      rgba(5, 4, 7, .34),
+      transparent 34%
+    );
+}
+
+/* 3호차 — 따뜻한 추억의 식당칸 */
+#sceneWrap[data-car="3"] {
+  --scene-light:
+    radial-gradient(
+      ellipse 19% 49% at 29% 26%,
+      rgba(255, 198, 98, .34),
+      transparent 100%
+    ),
+    radial-gradient(
+      ellipse 19% 49% at 54% 26%,
+      rgba(255, 207, 125, .33),
+      transparent 100%
+    ),
+    radial-gradient(
+      ellipse 19% 49% at 78% 26%,
+      rgba(255, 188, 95, .30),
+      transparent 100%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(136, 67, 35, .12),
+      transparent 68%
+    );
+
+  --scene-shadow:
+    radial-gradient(
+      ellipse at 50% 42%,
+      transparent 40%,
+      rgba(35, 8, 7, .48) 100%
+    ),
+    linear-gradient(
+      0deg,
+      rgba(29, 10, 5, .40),
+      transparent 40%
+    );
+}
+
+/* 2호차 — 별빛과 푸른 달빛 */
+#sceneWrap[data-car="2"] {
+  --scene-light:
+    linear-gradient(
+      149deg,
+      transparent 27%,
+      rgba(130, 162, 235, .22) 39%,
+      transparent 52%
+    ),
+    linear-gradient(
+      149deg,
+      transparent 49%,
+      rgba(111, 150, 224, .14) 58%,
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse at 51% 28%,
+      rgba(120, 150, 215, .13),
+      transparent 69%
+    );
+
+  --scene-shadow:
+    radial-gradient(
+      ellipse at 50% 36%,
+      transparent 25%,
+      rgba(1, 5, 21, .63) 100%
+    ),
+    linear-gradient(
+      0deg,
+      rgba(1, 4, 17, .43),
+      transparent 42%
+    );
+}
+
+/* 1호차 — 오래된 기록 보관실 */
+#sceneWrap[data-car="1"] {
+  --scene-light:
+    radial-gradient(
+      ellipse 30% 45% at 34% 17%,
+      rgba(235, 192, 119, .22),
+      transparent 100%
+    ),
+    radial-gradient(
+      ellipse 27% 40% at 69% 16%,
+      rgba(209, 174, 116, .17),
+      transparent 100%
+    ),
+    linear-gradient(
+      90deg,
+      rgba(41, 62, 41, .07),
+      transparent 55%
+    );
+
+  --scene-shadow:
+    radial-gradient(
+      ellipse at 49% 43%,
+      transparent 30%,
+      rgba(6, 13, 9, .65) 100%
+    ),
+    linear-gradient(
+      0deg,
+      rgba(5, 10, 7, .46),
+      transparent 47%
+    );
+}
+
+/* 기관실 — 마지막으로 남은 화실의 불빛 */
+#sceneWrap[data-car="0"] {
+  --scene-light:
+    radial-gradient(
+      ellipse 37% 52% at 55% 83%,
+      rgba(255, 118, 32, .36),
+      transparent 100%
+    ),
+    radial-gradient(
+      ellipse 25% 30% at 78% 48%,
+      rgba(231, 184, 111, .13),
+      transparent 100%
+    );
+
+  --scene-shadow:
+    radial-gradient(
+      ellipse at 52% 65%,
+      transparent 27%,
+      rgba(0, 0, 0, .69) 100%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(0, 0, 0, .28),
+      transparent 55%
+    );
+}
+
+/* 실제 물건 아래에 접촉 그림자 추가 */
+#sceneWrap[data-car="4"] #scene [data-id="suitcase"],
+#sceneWrap[data-car="3"] #scene [data-id="musicbox"],
+#sceneWrap[data-car="3"] #scene [data-id="register"],
+#sceneWrap[data-car="2"] #scene [data-id="trunk"],
+#sceneWrap[data-car="2"] #scene [data-id="starbox"] {
+  filter: drop-shadow(0 9px 6px rgba(0, 0, 0, .38));
+}
+
+/* 모션 감소 설정을 사용하는 사용자 배려 */
+@media (prefers-reduced-motion: reduce) {
+  #sceneWrap::before {
+    transition: none;
+  }
+}
+
+
+/* =========================================
+   THE LAST RUN — 엔딩 조명 변화
+========================================= */
+
+#ending {
+  isolation: isolate;
+}
+
+/* 시간이 흐르면서 따뜻한 새벽빛이 나타남 */
+#ending::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    radial-gradient(
+      ellipse at 50% 77%,
+      rgba(255, 170, 82, .20),
+      transparent 67%
+    ),
+    linear-gradient(
+      180deg,
+      transparent 20%,
+      rgba(244, 154, 107, .12) 100%
+    );
+  transition: opacity 3s ease;
+}
+
+#ending[data-phase="waking"]::before {
+  opacity: .3;
+}
+
+#ending[data-phase="running"]::before {
+  opacity: 1;
+}
+
+/* 글과 시계를 조명보다 위에 배치 */
+#ending > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* 회중시계의 명암도 이야기와 함께 변화 */
+#ending #ewatch {
+  transition:
+    filter 2.4s ease,
+    transform 2.4s ease;
+}
+
+#ending[data-phase="still"] #ewatch {
+  filter:
+    grayscale(.65)
+    brightness(.65);
+  transform: scale(.96);
+}
+
+#ending[data-phase="waking"] #ewatch {
+  filter:
+    brightness(1.1)
+    drop-shadow(0 0 18px rgba(240, 207, 126, .42));
+  transform: scale(1);
+}
+
+#ending[data-phase="running"] #ewatch {
+  filter:
+    brightness(1.2)
+    drop-shadow(0 0 32px rgba(255, 205, 118, .65));
+  transform: scale(1.045);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #ending::before,
+  #ending #ewatch {
+    transition: none;
+  }
+}
+
