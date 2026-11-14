@@ -72,6 +72,9 @@ button{font:inherit;color:inherit;cursor:pointer}
 #big.show p{opacity:1}
 #cap{position:absolute;left:0;right:0;bottom:calc(11vh + 5vh);z-index:3;text-align:center;padding:0 20px;opacity:0;transition:opacity .7s}
 #cap.show{opacity:1}
+/* 풍경 장면: 자막을 화면 가운데로 */
+#intro.mid #cap{bottom:auto;top:50%;transform:translateY(-50%)}
+#intro.mid #kicker{top:calc(50% - clamp(90px,13vw,170px))}
 #cap small{display:block;font-family:var(--font-type);letter-spacing:.3em;font-size:12px;color:var(--brass);margin-bottom:8px;min-height:1em}
 #cap p{margin:0 auto;max-width:40em;white-space:pre-line;word-break:keep-all;font-size:clamp(17px,2.3vw,25px);line-height:1.65;text-wrap:balance;text-shadow:0 2px 14px #000,0 0 3px #000}
 #iwatch{position:absolute;z-index:2;top:37%;left:50%;width:min(35vh,56vw);transform:translate(-50%,-50%);opacity:0;transition:opacity 1.2s}
@@ -147,12 +150,16 @@ header.top{flex:none;display:flex;align-items:center;gap:16px;padding:0 0 10px;b
 #scene{position:absolute;inset:0}
 #scene svg{width:100%;height:100%;display:block;font-family:var(--font-display)}
 .hot{cursor:pointer;transition:filter .25s}
+.hot:focus{outline:none}
 .hot:hover,.hot:focus-visible{filter:drop-shadow(0 0 10px rgba(240,207,126,.95)) brightness(1.15);outline:none}
 #tag{position:absolute;z-index:3;transform:translate(-50%,-100%);white-space:nowrap;background:#0d0907;border:1px solid var(--brass);color:var(--paper);font-size:13px;padding:3px 10px;border-radius:6px;opacity:0;pointer-events:none;transition:opacity .15s}
 #tag.below{transform:translate(-50%,0)}
 #tag.show{opacity:1}
 #card{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(5,4,3,.82);opacity:0;pointer-events:none;transition:opacity .8s;text-align:center;z-index:4}
 #card.show{opacity:1}
+/* 객차 소개가 끝나기 전에는 누를 수 없다 */
+#game.busy #scene,#game.busy #spots,#game.busy #train{pointer-events:none}
+#game.busy #spots{opacity:.45;transition:opacity .3s}
 #card small{font-family:var(--font-type);letter-spacing:.5em;padding-left:.5em;color:var(--brass);font-size:13px}
 #card strong{font-family:var(--font-display);font-weight:800;font-size:clamp(28px,5vw,56px);letter-spacing:.12em;padding-left:.12em;color:var(--gold)}
 
@@ -288,9 +295,9 @@ header.top{flex:none;display:flex;align-items:center;gap:16px;padding:0 0 10px;b
 
 /* ───── 엔딩 ───── */
 /* 엔딩: 시계는 위쪽에 고정, 글자는 바로 아래, 기차는 화면 맨 아래(캔버스) */
-#ending{flex-direction:column;align-items:center;justify-content:flex-start;gap:clamp(14px,3vh,28px);padding:7vh 16px 24px;text-align:center;background:radial-gradient(ellipse at 50% 45%,rgba(8,11,21,.2),rgba(8,11,21,.7) 80%)}
-#ewatch{width:min(26vh,40vw);flex:none}
-.estage{display:grid;width:100%;justify-items:center}
+#ending{flex-direction:column;align-items:center;justify-content:center;gap:clamp(10px,2vh,20px);padding:0 16px 6vh;text-align:center;background:radial-gradient(ellipse at 50% 45%,rgba(8,11,21,.2),rgba(8,11,21,.7) 80%)}
+#ewatch{width:min(23vh,38vw);flex:none}
+.estage{display:grid;width:100%;justify-items:center;align-items:start;min-height:clamp(150px,24vh,230px)}
 .estage>*{grid-area:1/1}
 #eline{font-family:var(--font-display);font-size:clamp(18px,2.7vw,28px);line-height:1.75;max-width:30em;margin:0;text-wrap:balance;text-shadow:0 2px 14px #000;transition:opacity .8s}
 #eline .kid{display:inline-block;color:#bfe0ff;font-size:1.35em}
@@ -300,3 +307,616 @@ header.top{flex:none;display:flex;align-items:center;gap:16px;padding:0 0 10px;b
 #eend h2{font-family:var(--font-display);font-weight:800;font-size:clamp(32px,6vw,64px);letter-spacing:.14em;padding-left:.14em;margin:0;background:linear-gradient(180deg,#fffbe8,var(--gold) 50%,#8a6223);-webkit-background-clip:text;background-clip:text;color:transparent}
 #eend p{margin:0;color:#d8c59c;max-width:32em;font-size:15px}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.2s!important}}
+
+
+/* 객실 화면에 은은한 가장자리 그림자와 필름 질감 추가 */
+.scene::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+
+  background:
+    radial-gradient(
+      ellipse at center,
+      transparent 48%,
+      rgba(0, 0, 0, .48) 100%
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent 0px,
+      rgba(255, 240, 200, .013) 1px,
+      transparent 2px,
+      transparent 4px
+    );
+}
+
+/* 발견 가능한 물건에 부드러운 반응 */
+#scene .hot {
+  transition:
+    filter .22s ease,
+    opacity .22s ease;
+}
+
+#scene .hot:hover,
+#scene .hot:focus-visible {
+  filter:
+    drop-shadow(0 0 6px rgba(240,207,126,.55))
+    brightness(1.1);
+}
+
+/* 멈춘 시간: 시각 표시 점멸 제거 */
+#game .clock .t {
+  animation: none;
+}
+
+
+/* =========================================
+   THE LAST RUN — 객차별 분위기 연출
+   기존 style.css 맨 아래에 추가
+========================================= */
+
+/* 조명 레이어와 클릭 가능한 SVG를 분리 */
+#sceneWrap {
+  isolation: isolate;
+}
+
+#sceneWrap #scene {
+  z-index: 0;
+}
+
+/* 조명: 스크린 블렌딩으로 밝은 부분만 강조 */
+#sceneWrap::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: var(--scene-light, transparent);
+  mix-blend-mode: screen;
+  opacity: .92;
+  transition: background .5s ease;
+}
+
+/* 그림자 + 아주 미세한 필름 질감 */
+#sceneWrap::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background:
+    var(--scene-shadow, transparent),
+    repeating-linear-gradient(
+      0deg,
+      transparent 0px,
+      rgba(255, 235, 195, .015) 3px,
+      transparent 4px,
+      transparent 6px
+    );
+}
+
+/* 4호차 — 시간이 멈춘 객실 */
+#sceneWrap[data-car="4"] {
+  --scene-light:
+    radial-gradient(
+      ellipse 23% 37% at 26% 14%,
+      rgba(255, 212, 138, .28),
+      transparent 100%
+    ),
+    radial-gradient(
+      ellipse 22% 36% at 72% 14%,
+      rgba(255, 211, 126, .18),
+      transparent 100%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(135, 166, 210, .10),
+      transparent 60%
+    );
+
+  --scene-shadow:
+    radial-gradient(
+      ellipse at 50% 45%,
+      transparent 38%,
+      rgba(5, 8, 18, .55) 100%
+    ),
+    linear-gradient(
+      0deg,
+      rgba(5, 4, 7, .34),
+      transparent 34%
+    );
+}
+
+/* 3호차 — 따뜻한 추억의 식당칸 */
+#sceneWrap[data-car="3"] {
+  --scene-light:
+    radial-gradient(
+      ellipse 19% 49% at 29% 26%,
+      rgba(255, 198, 98, .34),
+      transparent 100%
+    ),
+    radial-gradient(
+      ellipse 19% 49% at 54% 26%,
+      rgba(255, 207, 125, .33),
+      transparent 100%
+    ),
+    radial-gradient(
+      ellipse 19% 49% at 78% 26%,
+      rgba(255, 188, 95, .30),
+      transparent 100%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(136, 67, 35, .12),
+      transparent 68%
+    );
+
+  --scene-shadow:
+    radial-gradient(
+      ellipse at 50% 42%,
+      transparent 40%,
+      rgba(35, 8, 7, .48) 100%
+    ),
+    linear-gradient(
+      0deg,
+      rgba(29, 10, 5, .40),
+      transparent 40%
+    );
+}
+
+/* 2호차 — 별빛과 푸른 달빛 */
+#sceneWrap[data-car="2"] {
+  --scene-light:
+    linear-gradient(
+      149deg,
+      transparent 27%,
+      rgba(130, 162, 235, .22) 39%,
+      transparent 52%
+    ),
+    linear-gradient(
+      149deg,
+      transparent 49%,
+      rgba(111, 150, 224, .14) 58%,
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse at 51% 28%,
+      rgba(120, 150, 215, .13),
+      transparent 69%
+    );
+
+  --scene-shadow:
+    radial-gradient(
+      ellipse at 50% 36%,
+      transparent 25%,
+      rgba(1, 5, 21, .63) 100%
+    ),
+    linear-gradient(
+      0deg,
+      rgba(1, 4, 17, .43),
+      transparent 42%
+    );
+}
+
+/* 1호차 — 오래된 기록 보관실 */
+#sceneWrap[data-car="1"] {
+  --scene-light:
+    radial-gradient(
+      ellipse 30% 45% at 34% 17%,
+      rgba(235, 192, 119, .22),
+      transparent 100%
+    ),
+    radial-gradient(
+      ellipse 27% 40% at 69% 16%,
+      rgba(209, 174, 116, .17),
+      transparent 100%
+    ),
+    linear-gradient(
+      90deg,
+      rgba(41, 62, 41, .07),
+      transparent 55%
+    );
+
+  --scene-shadow:
+    radial-gradient(
+      ellipse at 49% 43%,
+      transparent 30%,
+      rgba(6, 13, 9, .65) 100%
+    ),
+    linear-gradient(
+      0deg,
+      rgba(5, 10, 7, .46),
+      transparent 47%
+    );
+}
+
+/* 기관실 — 마지막으로 남은 화실의 불빛 */
+#sceneWrap[data-car="0"] {
+  --scene-light:
+    radial-gradient(
+      ellipse 37% 52% at 55% 83%,
+      rgba(255, 118, 32, .36),
+      transparent 100%
+    ),
+    radial-gradient(
+      ellipse 25% 30% at 78% 48%,
+      rgba(231, 184, 111, .13),
+      transparent 100%
+    );
+
+  --scene-shadow:
+    radial-gradient(
+      ellipse at 52% 65%,
+      transparent 27%,
+      rgba(0, 0, 0, .69) 100%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(0, 0, 0, .28),
+      transparent 55%
+    );
+}
+
+/* 실제 물건 아래에 접촉 그림자 추가 */
+#sceneWrap[data-car="4"] #scene [data-id="suitcase"],
+#sceneWrap[data-car="3"] #scene [data-id="musicbox"],
+#sceneWrap[data-car="3"] #scene [data-id="register"],
+#sceneWrap[data-car="2"] #scene [data-id="trunk"],
+#sceneWrap[data-car="2"] #scene [data-id="starbox"] {
+  filter: drop-shadow(0 9px 6px rgba(0, 0, 0, .38));
+}
+
+/* 모션 감소 설정을 사용하는 사용자 배려 */
+@media (prefers-reduced-motion: reduce) {
+  #sceneWrap::before {
+    transition: none;
+  }
+}
+
+
+/* =========================================
+   THE LAST RUN — 엔딩 조명 변화
+========================================= */
+
+#ending {
+  isolation: isolate;
+}
+
+/* 시간이 흐르면서 따뜻한 새벽빛이 나타남 */
+#ending::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    radial-gradient(
+      ellipse at 50% 90%,
+      rgba(255, 170, 82, .26),
+      transparent 67%
+    ),
+    linear-gradient(
+      180deg,
+      transparent 20%,
+      rgba(244, 154, 107, .12) 100%
+    );
+  transition: opacity 3s ease;
+}
+
+#ending[data-phase="waking"]::before {
+  opacity: .3;
+}
+
+#ending[data-phase="running"]::before {
+  opacity: 1;
+  /* 불빛이 다 켜진 뒤, 아주 미세하게 일렁인다 */
+  animation: endFlicker 4.2s linear 3s infinite;
+}
+
+@keyframes endFlicker {
+  0%, 100% { opacity: 1; }
+  7% { opacity: 0.95; }
+  11% { opacity: 0.99; }
+  16% { opacity: 0.93; }
+  22% { opacity: 1; }
+  48% { opacity: 0.975; }
+  53% { opacity: 0.92; }
+  57% { opacity: 0.985; }
+  63% { opacity: 0.95; }
+  70% { opacity: 1; }
+  88% { opacity: 0.965; }
+}
+
+/* 글과 시계를 조명보다 위에 배치 */
+#ending > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* 회중시계의 명암도 이야기와 함께 변화 */
+#ending #ewatch {
+  transition:
+    filter 2.4s ease,
+    transform 2.4s ease;
+}
+
+#ending[data-phase="still"] #ewatch {
+  filter:
+    grayscale(.65)
+    brightness(.65);
+  transform: scale(.96);
+}
+
+#ending[data-phase="waking"] #ewatch {
+  filter:
+    brightness(1.1)
+    drop-shadow(0 0 18px rgba(240, 207, 126, .42));
+  transform: scale(1);
+}
+
+#ending[data-phase="running"] #ewatch {
+  filter:
+    brightness(1.2)
+    drop-shadow(0 0 32px rgba(255, 205, 118, .65));
+  transform: scale(1.045);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #ending::before,
+  #ending #ewatch {
+    transition: none;
+    animation: none;
+  }
+}
+
+
+/* =========================================
+   윤정의 사진 — 빈티지 폴라로이드 디자인
+========================================= */
+
+/* 폴라로이드 전체 */
+#flip {
+  width: min(310px, 100%);
+  margin: 14px auto 20px;
+  perspective: 1200px;
+  filter: drop-shadow(
+    0 15px 20px rgba(37, 22, 12, .28)
+  );
+}
+
+/* 기존 뒤집기 애니메이션 유지 */
+#flip > div {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  transform-style: preserve-3d;
+  transition: transform .8s
+    cubic-bezier(.25, .75, .25, 1);
+}
+
+/* 사진 앞면 */
+#flip .f {
+  position: absolute;
+  inset: 0;
+
+  padding: 14px 14px 58px;
+
+  background:
+    linear-gradient(
+      140deg,
+      #fffdf5 0%,
+      #f4eedd 55%,
+      #e6dcc5 100%
+    );
+
+  border: 1px solid #d4c6ac;
+
+  box-shadow:
+    inset 0 0 18px rgba(110, 77, 40, .09),
+    0 2px 4px rgba(0, 0, 0, .18);
+
+  backface-visibility: hidden;
+  overflow: hidden;
+}
+
+/* 윤정의 SVG 사진 */
+#flip .f > svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+
+  filter:
+    sepia(.12)
+    saturate(.83)
+    contrast(.96)
+    brightness(1.03);
+
+  box-shadow:
+    inset 0 0 15px rgba(0, 0, 0, .16),
+    0 0 0 1px rgba(77, 54, 36, .2);
+}
+
+/* 사진 위에 비치는 은은한 광택 */
+#flip .f::before {
+  content: "";
+  position: absolute;
+
+  top: 14px;
+  left: 14px;
+  right: 14px;
+  aspect-ratio: 1 / 1;
+
+  background:
+    linear-gradient(
+      125deg,
+      rgba(255, 255, 255, .24) 0%,
+      transparent 32%,
+      transparent 64%,
+      rgba(255, 255, 255, .09) 100%
+    );
+
+  box-shadow:
+    inset 0 0 25px rgba(39, 25, 13, .15);
+
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* 폴라로이드 하단 손글씨 */
+#flip .f::after {
+  content: "1985. 04 · 새벽역";
+
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 11px;
+
+  text-align: center;
+
+  font-family: var(--font-hand);
+  font-size: 28px;
+  color: #62513d;
+
+  transform: rotate(-2deg);
+  letter-spacing: .025em;
+}
+
+/* 사진 뒷면 */
+#flip .bk {
+  position: absolute;
+  inset: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 50px 27px 36px;
+
+  background:
+    repeating-linear-gradient(
+      180deg,
+      transparent 0px,
+      transparent 29px,
+      rgba(132, 100, 67, .10) 30px
+    ),
+    linear-gradient(
+      140deg,
+      #f4ebd5,
+      #e7d8b8
+    );
+
+  color: #493a2d;
+  font-family: var(--font-hand);
+  font-size: 27px;
+  line-height: 1.55;
+
+  border: 1px solid #c9b694;
+
+  box-shadow:
+    inset 0 0 35px rgba(112, 83, 48, .14);
+
+  transform: rotateY(180deg);
+  backface-visibility: hidden;
+}
+
+/* 뒷면 상단의 작은 기록 */
+#flip .bk::before {
+  content: "1985 · 새벽역";
+
+  position: absolute;
+  top: 19px;
+  left: 22px;
+
+  font-family: var(--font-type);
+  font-size: 12px;
+  color: #8b7255;
+  letter-spacing: .08em;
+}
+
+/* 뒷면 아래쪽 작은 장식선 */
+#flip .bk::after {
+  content: "";
+  position: absolute;
+
+  bottom: 22px;
+  left: 25%;
+  right: 25%;
+
+  height: 1px;
+  background: rgba(116, 87, 54, .28);
+}
+
+/* 뒤집기 버튼 */
+#flipb {
+  border-radius: 999px;
+  padding: 10px 26px;
+
+  transition:
+    background .2s,
+    transform .2s;
+}
+
+#flipb:hover {
+  transform: translateY(-2px);
+}
+
+/* 모바일 대응 */
+@media (max-width: 520px) {
+  #flip {
+    width: min(270px, 100%);
+  }
+
+  #flip .f::after {
+    font-size: 24px;
+  }
+
+  #flip .bk {
+    font-size: 24px;
+  }
+}
+
+/* 모션 최소화 설정 */
+@media (prefers-reduced-motion: reduce) {
+  #flip > div {
+    transition-duration: .01ms;
+  }
+}
+
+/* =========================================
+   디테일: 멈춘 금빛 파편, 장면 전환, 내레이션
+========================================= */
+
+/* 공중에 멈춘 회중시계 파편이 아주 느리게 반짝인다 */
+.shard {
+  opacity: .55;
+  filter: drop-shadow(0 0 3px rgba(255, 226, 154, .8));
+  animation: shardTw 6s ease-in-out infinite;
+}
+
+@keyframes shardTw {
+  0%, 100% { opacity: .25; }
+  50% { opacity: .85; }
+}
+
+/* 새 객차에 들어설 때 장면이 스며들 듯 나타난다 */
+#scene.enter {
+  animation: sceneIn 1.4s ease both;
+}
+
+@keyframes sceneIn {
+  from { opacity: 0; filter: blur(8px) brightness(.6); }
+  to { opacity: 1; filter: none; }
+}
+
+/* 내레이션이 바뀔 때 부드럽게 떠오른다 */
+#say.in {
+  animation: sayIn .55s ease both;
+}
+
+@keyframes sayIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: none; }
+}
