@@ -19,27 +19,53 @@
   </div>
   <div class="ticket">
     <div class="main">
-      <div class="row"><span>승 차 권</span><span>No. 1986-1231</span></div>
-      <div class="route"><span>마지막 운행</span><i></i><span>새벽역</span></div>
+      <div class="row">
+          <span>승 차 권</span>
+          <span>No. 1986-1231</span>
+      </div>
+      <div class="route">
+          <span>마지막 운행</span>
+          <i></i>
+          <span>새벽역</span>
+      </div>
       <dl>
-        <dt>DATE</dt><dt>TIME</dt><dt>CAR</dt>
-        <dd>2026.12.31</dd><dd>11:59</dd><dd>4호차</dd>
+        <dt>DATE</dt>
+          <dt>TIME</dt>
+          <dt>CAR</dt>
+        <dd>2026.12.31</dd>
+          <dd>11:59</dd>
+          <dd>4호차</dd>
       </dl>
     </div>
     <div class="stub">
       <button id="board" type="button">탑승하기</button>
     </div>
   </div>
-  <button id="sndOn" class="snd" type="button" aria-pressed="false"><span class="ic" aria-hidden="true">♪</span><span id="sndTxt">소리 켜기 · 빗소리 들어보기</span></button>
+  <button id="sndOn" class="snd" type="button" aria-pressed="true">
+      <span class="ic" aria-hidden="true">♪</span>
+      <span id="sndTxt">소리 끄기 · 탑승하면 재생</span>
+  </button>
   <p class="note">소리를 켜고 플레이하면 더 좋습니다. 진행 시간은 15분 안팎입니다.</p>
 </section>
 
 <section id="intro" class="screen" aria-live="polite">
-  <div class="bar t"></div><div class="bar b"></div>
+  <div class="bar t"></div>
+    <div class="bar b"></div>
   <div id="kicker"></div>
-  <div id="big"><h2 aria-label="시간이 멈춘 열차"></h2><div class="rule"></div><p>THE TRAIN WHERE TIME STOOD STILL</p></div>
+  <div id="big">
+      <h2 aria-label="시간이 멈춘 열차"></h2>
+      <div class="rule"></div>
+      <p>THE TRAIN WHERE TIME STOOD STILL</p>
+  </div>
   <div id="iwatch"></div>
-  <div id="cap"><small></small><p></p><div class="nudge" id="nudge" aria-hidden="true"><span class="tri"></span><span class="txt">화면을 눌러 계속</span></div></div>
+  <div id="cap">
+      <small></small>
+      <p></p>
+      <div class="nudge" id="nudge" aria-hidden="true">
+          <span class="tri"></span>
+          <span class="txt">화면을 눌러 계속</span>
+      </div>
+  </div>
   <button id="skip" type="button">건너뛰기</button>
 </section>
 
@@ -47,12 +73,19 @@
  <div class="wrap">
   <header class="top">
    <div class="logo">
-    <svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="6" r="3.5" fill="none" stroke="#c79a4b" stroke-width="2"/><circle cx="20" cy="23" r="14" fill="none" stroke="#c79a4b" stroke-width="2.4"/><path d="M20 14v9l5 3" fill="none" stroke="#f0cf7e" stroke-width="2.2" stroke-linecap="round"/></svg>
+    <svg viewBox="0 0 40 40" aria-hidden="true">
+        <circle cx="20" cy="6" r="3.5" fill="none" stroke="#c79a4b" stroke-width="2"/>
+        <circle cx="20" cy="23" r="14" fill="none" stroke="#c79a4b" stroke-width="2.4"/>
+        <path d="M20 14v9l5 3" fill="none" stroke="#f0cf7e" stroke-width="2.2" stroke-linecap="round"/>
+    </svg>
     <h1>시간이 멈춘 열차</h1>
    </div>
    <nav class="train" id="train" aria-label="열차 칸 이동"></nav>
    <div class="tools">
-    <div class="clock" role="img" aria-label="열차 시각 11시 59분, 멈춤"><span class="s">열차 시각</span><span class="t">11:59</span></div>
+    <div class="clock" role="img" aria-label="열차 시각 11시 59분, 멈춤">
+        <span class="s">열차 시각</span>
+        <span class="t">11:59</span>
+    </div>
     <button class="tbtn" id="bSound" type="button" aria-pressed="true">소리 켜짐</button>
     <button class="tbtn" id="bReset" type="button">처음부터</button>
    </div>
@@ -60,16 +93,54 @@
 
   <div class="layout">
    <div class="main">
-    <div class="cartitle"><div class="eyebrow" id="eyebrow"></div><h2 id="ctitle"></h2><div class="lockcount" id="lockcount"></div></div>
+    <div class="cartitle">
+        <div class="eyebrow" id="eyebrow"></div>
+        <h2 id="ctitle"></h2>
+        <div class="lockcount" id="lockcount"></div>
+    </div>
     <p class="goal" id="goal"></p>
-    <div class="stagebox"><div class="scene" id="sceneWrap"><div id="scene"></div><div id="tag" aria-hidden="true"></div><div id="card"><small></small><strong></strong></div></div></div>
-    <div class="narr"><p id="say" aria-live="polite"></p><div id="next"></div></div>
-    <div class="spotsrow"><div class="spots" id="spots"></div><p class="legend"><i class="k puz"></i>퍼즐 <i class="k ok"></i>푼 곳 <i class="k seen"></i>본 곳</p></div>
+    <div class="stagebox"><div class="scene" id="sceneWrap">
+        <div id="scene"></div>
+        <div id="tag" aria-hidden="true"></div>
+        <div id="card">
+            <small></small>
+            <strong></strong>
+        </div>
+    </div>
+    </div>
+    <div class="narr">
+        <p id="say" aria-live="polite"></p>
+        <div id="next"></div>
+    </div>
+    <div class="spotsrow">
+        <div class="spots" id="spots"></div>
+        <p class="legend">
+            <i class="k puz"></i>퍼즐
+            <i class="k ok"></i>푼 곳
+            <i class="k seen"></i>본 곳
+        </p>
+    </div>
    </div>
    <aside class="side">
-    <section class="box" aria-labelledby="invH"><h3 id="invH">소지품 <small id="parts"></small></h3><div class="pslots" id="pslots"></div><div class="list" id="items"></div></section>
-    <section class="box" aria-labelledby="noteH"><h3 id="noteH">단서 수첩 <small>눌러서 다시 보기</small></h3><div class="list" id="notes"></div></section>
-    <section class="box" aria-labelledby="docH"><h3 id="docH">기관사의 일기 <small id="docCount"></small></h3><div class="list" id="docs"></div></section>
+    <section class="box" aria-labelledby="invH">
+        <h3 id="invH">소지품
+            <small id="parts"></small>
+        </h3>
+        <div class="pslots" id="pslots"></div>
+        <div class="list" id="items"></div>
+    </section>
+    <section class="box" aria-labelledby="noteH">
+        <h3 id="noteH">단서 수첩
+            <small>눌러서 다시 보기</small>
+        </h3>
+        <div class="list" id="notes"></div>
+    </section>
+    <section class="box" aria-labelledby="docH">
+        <h3 id="docH">기관사의 일기
+            <small id="docCount"></small>
+        </h3>
+        <div class="list" id="docs"></div>
+    </section>
    </aside>
   </div>
  </div>
@@ -81,14 +152,22 @@
   <p id="eline"></p>
   <div id="eend">
     <h2>시간은 다시 흐른다</h2>
-    <p>과거에 머물고 싶은 마음과, 그럼에도 앞으로 흘러가야 하는 시간에 관한 이야기.</p>
+    <p>과거에 머물고 싶은 마음과,<br>
+        그럼에도 앞으로 흘러가야 하는 시간에 관한 이야기.</p>
     <button class="btn" id="again" type="button">처음부터 다시 타기</button>
   </div>
   </div>
 </section>
 
 <div id="modal" role="dialog" aria-modal="true"></div>
-<div id="voice"><small></small><p></p><div class="nudge" id="vnudge" aria-hidden="true"><span class="tri"></span><span class="txt">화면을 눌러 계속</span></div></div>
+<div id="voice">
+    <small></small>
+    <p></p>
+    <div class="nudge" id="vnudge" aria-hidden="true">
+        <span class="tri"></span>
+        <span class="txt">화면을 눌러 계속</span>
+    </div>
+</div>
 <div id="toast" role="status"></div>
 
 <script src="script.js"></script>
