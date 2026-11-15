@@ -1411,7 +1411,7 @@ header.top {
 
 .panel {
   position: relative;
-  width: min(560px, 100%);
+  width: min(660px, 100%);
   max-height: 100%;
   overflow: auto;
   background: var(--paper);
@@ -1428,7 +1428,7 @@ header.top {
 }
 
 .panel.wide {
-  width: min(760px, 100%);
+  width: min(840px, 100%);
 }
 
 .panel .k {
@@ -1449,6 +1449,32 @@ header.top {
 
 .panel p {
   margin: 0 0 12px;
+}
+
+/* 한 글자·한 단어만 다음 줄로 떨어지지 않게 */
+.panel p,
+.panel .hand,
+.panel .hint,
+.panel h3 {
+  word-break: keep-all;
+  text-wrap: pretty;
+}
+
+/* 힌트 자리는 처음부터 잡아 두고, 버튼을 그 위에 겹쳐 둔다 (열어도 팝업 크기 고정) */
+.hintwrap {
+  position: relative;
+  margin: 0 0 12px;
+}
+
+.hintwrap .hint.veiled {
+  visibility: hidden;
+}
+
+.hintwrap.closed .hbtn {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .panel .x {
@@ -1490,7 +1516,7 @@ header.top {
 }
 
 .panel .msg {
-  min-height: 1.7em;
+  min-height: 3.4em;
   color: var(--maroon);
   font-weight: 700;
   margin: 8px 0 0;
@@ -2702,4 +2728,9 @@ header.top {
     opacity: 1;
     transform: none;
   }
+}
+
+/* 우편물을 고를 때 안내 문구 자리(세 줄 + 버튼)를 미리 잡아 둔다 */
+.panel .lost ~ .msg {
+  min-height: 8.6em;
 }

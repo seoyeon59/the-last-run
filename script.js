@@ -1913,7 +1913,7 @@
           hand: S.flags.fixed,
           glass: S.flags.fixed,
         }) +
-        '</div><p>어느새 주머니에 들어와 있던 시계 케이스. 이것을 지닌 사람만 멈춘 시간 속에서 움직일 수 있는 듯하다.</p><p>' +
+        '</div><p>어느새 주머니에 들어와 있던 시계 케이스. 이것을 지닌 사람만 멈춘 시간 속에서 움직일 수 있는 듯하다.</p><p>케이스 안쪽에 작은 글씨가 새겨져 있다.</p><p class="pencil">“자정에, 새벽역에서. — 윤정”</p><p>' +
         (S.flags.fixed
           ? '네 개의 부품이 모두 제자리를 찾았다.'
           : '속이 비어 있다. 흩어진 부품 네 개를 찾아야 한다. (현재 ' + partCount() + '/4)') +
@@ -1952,11 +1952,30 @@
       part: 1,
       view: () => '<p>회중시계의 두 번째 부품. 오르골 안쪽에서 멜로디와 함께 굴러 나왔다.</p>',
     },
-    diary3: {
-      n: '일기 · 3월 14일',
+    // 시계 부품과 함께 나오는 기관사의 일기
+    diaryWatch: {
+      n: '일기 · 1986년 봄',
       ic: IC.diary,
       view: () =>
-        '<div class="hand">3월 14일.\n윤정이 세상을 떠났다.\n그날 이후 새벽역에는 더 이상 노란 우산이 보이지 않는다.\n하지만 나는 여전히 매일 자정 그곳에 열차를 세운다.\n언젠가 다시 그녀가 서 있을 것만 같아서.</div>',
+        '<div class="hand">1986년 봄.\n오늘 처음으로 내 손으로 열차를 몰았다.\n윤정이 축하한다며 회중시계를 건넸다.\n자정에 새벽역에 닿으면 태엽을 감으라고 했다.\n그 시간에 승강장에 서 있겠다고.\n시계 안쪽에는 그녀의 글씨가 새겨져 있다.</div>',
+    },
+    diaryAnniv: {
+      n: '일기 · 1997년 4월',
+      ic: IC.diary,
+      view: () =>
+        '<div class="hand">1997년 4월.\n결혼하고 열 번째 봄이다.\n윤정과 처음 마주 앉았던 식당칸에서 커피 두 잔과 케이크 한 조각을 시켰다.\n그녀가 작은 오르골을 내밀었다.\n처음 만난 날의 자기 모습을 잊지 말라면서.\n노란 우산, 파란 코트, 빨간 목도리, 초록색 기차표.\n잊을 리가 없다.</div>',
+    },
+    diaryWard: {
+      n: '일기 · 2004년 2월',
+      ic: IC.diary,
+      view: () =>
+        '<div class="hand">2004년 2월.\n윤정이 병원에 있다.\n이제 새벽역까지 마중을 나오지 못한다.\n병실 창으로 내 열차가 지나가는 시간을 센다고 했다.\n자기가 서 있지 않더라도 자정에는 꼭 열차를 세워 달라고 했다.\n나는 그러겠다고 약속했다.</div>',
+    },
+    diary3: {
+      n: '일기 · 2004년 3월 14일',
+      ic: IC.diary,
+      view: () =>
+        '<div class="hand">2004년 3월 14일.\n윤정이 세상을 떠났다.\n그날 이후 새벽역에는 더 이상 노란 우산이 보이지 않는다.\n하지만 나는 여전히 매일 자정 그곳에 열차를 세운다.\n언젠가 다시 그녀가 서 있을 것만 같아서.</div>',
     },
     hand: {
       n: '시계바늘',
@@ -1965,10 +1984,10 @@
       view: () => '<p>회중시계의 세 번째 부품. 별빛을 머금은 듯 차갑게 빛난다.</p>',
     },
     diary4: {
-      n: '일기 · 12월 31일',
+      n: '일기 · 2026년 12월 31일',
       ic: IC.diary,
       view: () =>
-        '<div class="hand">12월 31일.\n오늘이 마지막 운행이다.\n이제 이 열차를 떠나야 한다.\n사람들은 새로운 시작이라고 말하지만, 내게는 마지막 남은 약속마저 끝나는 날이다.\n윤정이 기다리던 새벽역.\n나는 아직 그곳을 떠날 준비가 되지 않았다.</div>',
+        '<div class="hand">2026년 12월 31일.\n오늘이 마지막 운행이다.\n이제 이 열차를 떠나야 한다.\n사람들은 새로운 시작이라고 말하지만, 내게는 마지막 남은 약속마저 끝나는 날이다.\n윤정이 기다리던 새벽역.\n나는 아직 그곳을 떠날 준비가 되지 않았다.</div>',
     },
     glass: {
       n: '유리조각',
@@ -1982,13 +2001,28 @@
       view: () =>
         '<div style="width:200px;margin:0 auto 10px">' +
         IC.letter +
-        '</div><p>노란 우산 그림이 그려진 편지. 겉봉에는 <b>한시원에게</b>라고 적혀 있다.</p><p>' +
+        '</div><p>노란 우산 그림이 그려진 편지. 겉봉에는 <b>한시원에게</b>라고 적혀 있다.</p><p>소인은 <b>3월 13일</b>. 봉투 귀퉁이는 여러 번 만진 듯 닳아 있지만, 봉인은 한 번도 뜯긴 적이 없다.</p><p>' +
         (S.flags.given
           ? '편지는 주인에게 돌아갔다.'
           : '봉인이 단단해서 열리지 않는다. 받을 사람의 손에 닿아야 할 것 같다.') +
         '</p>',
     },
   };
+  // 기록을 처음 읽고 닫았을 때 주인공이 떠올리는 한마디
+  const REFLECT = {
+    diary1: '기관사에게도 누군가를 처음 만난 봄이 있었다. 노란 우산을 쓴 사람, 윤정.',
+    photo: '사진 속 이 사람이 윤정인 모양이다. 뒷면의 글씨가 마음에 걸린다.',
+    diaryWatch: '이 회중시계는 윤정이 첫 운행 날 건넨 선물이었다. 자정의 약속도 그날 시작됐다.',
+    diaryAnniv: '두 사람은 부부였다. 오르골도, 그 순서도, 그녀가 남긴 것이었다.',
+    diaryWard: '그녀는 아팠다. 그는 자정마다 열차를 세우겠다고 약속했다.',
+    diary3:
+      '그래서 그는 스물두 해 동안 자정마다 새벽역에 열차를 세웠던 것이다. 아무도 서 있지 않은 승강장에.',
+    diary4:
+      '오늘 운행이 끝나면 자정의 새벽역에 설 이유도 사라진다. 그래서 시계를 놓지 못했던 걸까.',
+    letter:
+      '받고도 차마 열지 못한 편지. 그는 그녀의 마지막 말을 스물두 해 동안 보관함 깊숙이 넣어 두었다.',
+  };
+  let pendingSay = null;
   // 소지품 한 줄 설명
   const DESC = {
     case: '어느새 주머니에 들어온 빈 케이스',
@@ -1999,7 +2033,7 @@
     glass: '깨진 시계 유리의 마지막 조각',
     letter: '“한시원에게”. 단단히 봉인되어 있다',
   };
-  const DOCS = ['diary1', 'diary3', 'diary4'];
+  const DOCS = ['diary1', 'diaryWatch', 'diaryAnniv', 'diaryWard', 'diary3', 'diary4'];
   // 소지품 보유 여부
   const has = (id) => S.inv.includes(id);
   // 모은 시계 부품 개수
@@ -2033,7 +2067,9 @@
   // 오른쪽 소지품·단서 수첩·일기 목록 다시 그리기
   function renderSide(newId) {
     const inv = S.inv.filter((i) => !DOCS.includes(i)),
-      docs = S.inv.filter((i) => DOCS.includes(i));
+      docs = S.inv
+        .filter((i) => DOCS.includes(i))
+        .sort((a, b) => DOCS.indexOf(a) - DOCS.indexOf(b));
     const I = $('#items');
     I.innerHTML = inv.length ? '' : '<div class="empty">아직 아무것도 없다</div>';
     inv.forEach((id) => {
@@ -2073,7 +2109,7 @@
       e.onclick = () => showItem(id);
       D.append(e);
     });
-    $('#docCount').textContent = docs.length + ' / 3장';
+    $('#docCount').textContent = docs.length + ' / ' + DOCS.length + '장';
     const N = $('#notes');
     N.innerHTML = S.notes.length ? '' : '<div class="empty">물건을 살펴보면 여기에 모여요</div>';
     S.notes.forEach((k) => {
@@ -2087,9 +2123,29 @@
       N.append(e);
     });
   }
+  // 시계 부품마다 함께 나오는 기관사의 일기
+  const PART_DOC = { spring: 'diaryWatch', gear: 'diaryAnniv', hand: 'diaryWard', glass: 'diary4' };
+  // 부품을 얻었을 때: 부품 팝업을 열고, 함께 나온 일기를 바로 읽을 수 있게 한다
+  function gotPart(id) {
+    addItem(id);
+    const doc = PART_DOC[id];
+    addItem(doc, true);
+    showItem(id, 1);
+    const acts = el(
+      'div',
+      'acts',
+      '<button class="btn" type="button">함께 나온 일기 읽기</button>',
+    );
+    acts.firstChild.onclick = () => {
+      A.paper();
+      showItem(doc, 1);
+    };
+    $('#modal .body').append(acts);
+  }
   // 소지품 상세 팝업 열기
   function showItem(id, got) {
     const it = ITEMS[id];
+    pendingSay = REFLECT[id] && !S.flags['r_' + id] ? id : null;
     const b = openModal({ k: got ? '획득' : '소지품', title: it.n, html: it.view() });
     if (it.after) it.after(b);
   }
@@ -2119,18 +2175,21 @@
       const key = o.title;
       S.hints = S.hints || {};
       if (S.hints[key]) return;
-      h.hidden = true;
+      h.classList.add('veiled');
 
       const bt = el('button', 'btn ghost hbtn', '힌트 보기');
       bt.type = 'button';
       bt.onclick = () => {
         S.hints[key] = 1;
-        h.hidden = false;
+        h.classList.remove('veiled');
+        wrap.classList.remove('closed');
         h.classList.add('reveal');
         bt.remove();
         A.tick();
       };
-      h.before(bt);
+      const wrap = el('div', 'hintwrap closed');
+      h.before(wrap);
+      wrap.append(bt, h);
     });
     m.classList.add('on');
     m.onclick = (e) => {
@@ -2144,6 +2203,12 @@
   // 팝업 닫기
   function closeModal() {
     $('#modal').classList.remove('on');
+    if (pendingSay) {
+      const id = pendingSay;
+      pendingSay = null;
+      S.flags['r_' + id] = 1;
+      say(REFLECT[id]);
+    }
     hideTag();
     if (lastFocus && lastFocus.focus && !(lastFocus.closest && lastFocus.closest('#scene')))
       try {
@@ -2701,11 +2766,13 @@
             .join('') +
           // 영수증
           '<g class="hot" data-id="receipt" tabindex="0" role="button" aria-label="식탁 위 영수증"><path d="M380 590h62v70l-10 -6l-10 6l-11 -6l-10 6l-11 -6l-10 6Z" fill="#fffdf6" stroke="#8d7a5c" transform="rotate(-8 410 620)"/><path d="M388 606h44M388 620h44M388 634h30" stroke="#6b4a2c" stroke-width="2.5" transform="rotate(-8 410 620)"/><ellipse cx="520" cy="622" rx="34" ry="10" fill="#d8cdb6"/><path d="M498 600h44v18q-22 14 -44 0Z" fill="#fff"/></g>' +
+          // 셋째 식탁: 식사하다 멈춘 연인
+          '<g class="hot" data-id="diners" tabindex="0" role="button" aria-label="식사하던 연인"><path d="M1095 582q46 -40 92 0Z" fill="#2a3144"/><path d="M1131 552l10 16l10 -16Z" fill="#56627c"/><circle cx="1141" cy="522" r="30" fill="#4a556f"/><path d="M1110 520Q1110 488 1141 488Q1172 488 1172 520Q1164 503 1146 503Q1124 502 1110 520Z" fill="#161b29"/><path d="M1178 582q16 -10 8 -34l-14 6q4 14 -8 22Z" fill="#2a3144"/><ellipse cx="1182" cy="546" rx="9" ry="7" fill="#4a556f"/><path d="M1184 542l10 -26M1190 517l2 -9M1194 518l3 -8M1198 520l4 -8" stroke="#cfd3d8" stroke-width="2.5" stroke-linecap="round"/><path d="M1289 582q44 -38 88 0Z" fill="#5a2f45"/><path d="M1300 526Q1297 486 1333 486Q1369 486 1366 526L1370 574Q1333 584 1296 574Z" fill="#161b29"/><circle cx="1333" cy="524" r="28" fill="#4a556f"/><path d="M1305 522Q1307 494 1333 493Q1359 494 1361 522Q1350 506 1334 506Q1333 505 1332 506Q1316 506 1305 522Z" fill="#161b29"/><path d="M1292 582q-18 -8 -10 -34l14 6q-4 14 6 22Z" fill="#5a2f45"/><ellipse cx="1288" cy="548" rx="9" ry="7" fill="#4a556f"/><rect x="1266" y="530" width="22" height="18" rx="4" fill="#fff"/><path d="M1266 535q-8 0 -8 5q0 5 8 5" fill="none" stroke="#fff" stroke-width="2.5"/><path d="M1273 524q-4 -7 0 -13q4 -6 0 -12M1282 524q-4 -7 0 -13q4 -6 0 -12" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".4"/></g>' +
           // 첫 식탁: 두 번째 커피잔과 조각 케이크 (두 사람이 앉았던 자리)
           '<g pointer-events="none"><ellipse cx="470" cy="676" rx="34" ry="10" fill="#d8cdb6"/><path d="M448 654h44v18q-22 14 -44 0Z" fill="#fff"/><ellipse cx="470" cy="655" rx="20" ry="4" fill="#4a2a1a"/><path d="M492 658q12 0 12 7q0 7 -12 7" fill="none" stroke="#fff" stroke-width="3"/>' +
           '<path d="M464 644q-5 -9 0 -16q5 -8 0 -16M476 644q-5 -9 0 -16q5 -8 0 -16" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".35"/>' +
           '<ellipse cx="572" cy="682" rx="34" ry="9" fill="#e9e2d0"/><path d="M552 676l36 -7v-15l-36 7Z" fill="#f3d9a4"/><path d="M552 661l36 -7l-13 -6l-33 8Z" fill="#7a3b2a"/><path d="M552 668l36 -7" stroke="#fff" stroke-width="2" opacity=".7"/><path d="M596 690l22 -5" stroke="#b9b3a4" stroke-width="3" stroke-linecap="round"/></g>' +
-          // 셋째 식탁: 손대지 않은 상차림
+          // 셋째 식탁: 두 사람의 접시와 잔
           '<g pointer-events="none">' +
           [1170, 1330]
             .map(
@@ -2727,6 +2794,9 @@
                 ' 637h16" fill="none" stroke="#fff" stroke-width="2" opacity=".6"/>',
             )
             .join('') +
+          // 접시 위 음식: 스테이크와 곁들임, 오믈렛
+          '<ellipse cx="1166" cy="653" rx="18" ry="6" fill="#6e3324"/><ellipse cx="1165" cy="651" rx="14" ry="4" fill="#96502f"/><path d="M1156 651l16 -2M1158 654l14 -2" stroke="#5a2a1c" stroke-width="1.2"/><circle cx="1187" cy="654" r="4" fill="#3f9a56"/><circle cx="1181" cy="659" r="3" fill="#e0a13a"/><circle cx="1190" cy="659" r="2.5" fill="#c62f2b"/>' +
+          '<path d="M1312 656q18 -15 38 0q-18 9 -38 0Z" fill="#edc65f"/><path d="M1318 654q7 -6 14 0M1330 652q6 -4 12 2" stroke="#c99a1c" stroke-width="1.5" fill="none"/><path d="M1322 651q8 -3 14 1" stroke="#c62f2b" stroke-width="2.5" fill="none" stroke-linecap="round"/><circle cx="1352" cy="657" r="3" fill="#3f9a56"/>' +
           '</g>' +
           // 오르골
           '<g class="hot" data-id="musicbox" tabindex="0" role="button" aria-label="오르골"><ellipse cx="846" cy="652" rx="78" ry="14" fill="#e9e2d0"/><rect x="786" y="596" width="120" height="52" rx="8" fill="#5a2a3a"/><rect x="786" y="596" width="120" height="52" rx="8" fill="url(#gWood)"/><rect x="786" y="590" width="120" height="14" rx="6" fill="url(#gBrass)"/>' +
@@ -2785,6 +2855,8 @@
           seat(300, 310, '#3c3566') +
           seat(690, 310, '#3c3566') +
           seat(1080, 310, '#3c3566') +
+          // 그림책을 읽다 잠든 아이
+          '<g class="hot" data-id="child" tabindex="0" role="button" aria-label="잠든 아이"><path d="M312 606q34 -22 70 0l12 84h-92Z" fill="#5b4d7e"/><path d="M312 606q34 -22 70 0l4 26q-38 -14 -78 0Z" fill="#6f609a"/><path d="M378 632q20 4 34 16l-6 12q-16 -8 -32 -8Z" fill="#5b4d7e"/><ellipse cx="412" cy="654" rx="9" ry="6" fill="#4a5878"/><g transform="rotate(16 350 566)"><path d="M322 566Q320 534 350 534Q380 534 378 566L380 590Q350 598 320 590Z" fill="#161b29"/><circle cx="350" cy="568" r="25" fill="#4a5878"/><path d="M325 564Q328 540 350 540Q372 540 375 564Q362 552 350 553Q336 552 325 564Z" fill="#161b29"/><path d="M338 574q5 4 10 0M354 574q5 4 10 0" fill="none" stroke="#161b29" stroke-width="2" stroke-linecap="round"/></g></g>' +
           // 불 꺼진 객실에 떨어지는 달빛
           '<g pointer-events="none">' +
           [330, 720, 1110]
@@ -2800,6 +2872,8 @@
           '</g>' +
           // 그림책
           '<g class="hot" data-id="book" tabindex="0" role="button" aria-label="좌석 위 그림책"><path d="M400 640l72 -12l72 12v40l-72 -10l-72 10Z" fill="#f4eedd" stroke="#2a1c12"/><path d="M472 628v42" stroke="#2a1c12"/><path d="M414 648l44 -7M414 660l44 -7" stroke="#2b5b8a" stroke-width="3"/><path transform="translate(508 652) scale(.8)" d="M0 -11Q1.5 -1.5 11 0Q1.5 1.5 0 11Q-1.5 1.5 -11 0Q-1.5 -1.5 0 -11Z" fill="#f2c230"/></g>' +
+          // 예약석: 수십 년째 비워 둔 자리와 노란 우산
+          '<g class="hot" data-id="reserved" tabindex="0" role="button" aria-label="예약석"><rect x="1196" y="536" width="96" height="46" rx="3" fill="#f4eedd" stroke="#6e4a1c" stroke-width="2"/><text x="1244" y="566" text-anchor="middle" font-size="22" font-weight="800" fill="#6b1d1f" font-family="Nanum Myeongjo,serif">예약석</text><g transform="translate(1334 612)"><path d="M0 -72V-58" stroke="#3b2115" stroke-width="4" stroke-linecap="round"/><path d="M0 -60Q13 -18 6 36H-6Q-13 -18 0 -60Z" fill="#f2c230"/><path d="M0 -60V36M-5 -30Q-6 4 -3 36M5 -30Q6 4 3 36" fill="none" stroke="#c99a1c" stroke-width="1.5"/><rect x="-8" y="8" width="16" height="6" rx="2" fill="#8a6223"/><path d="M0 36V54Q0 66 -10 64" fill="none" stroke="#3b2115" stroke-width="5" stroke-linecap="round"/></g></g>' +
           // 트렁크
           '<g class="hot" data-id="trunk" tabindex="0" role="button" aria-label="낡은 트렁크"><rect x="820" y="726" width="250" height="126" rx="10" fill="#4a2a1a"/><rect x="820" y="726" width="250" height="126" rx="10" fill="url(#gWood)"/><rect x="820" y="' +
           (S.flags.trunk ? 700 : 770) +
@@ -2872,7 +2946,7 @@
           '<g class="hot" data-id="notice" tabindex="0" role="button" aria-label="운행 안내문"><rect x="410" y="220" width="170" height="230" fill="#f6f1e4" stroke="#2a1c12" stroke-width="2"/><rect x="410" y="220" width="170" height="40" fill="#6b1d1f"/><text x="495" y="247" text-anchor="middle" font-size="19" font-weight="800" fill="#fde9c0">운행 안내</text><path d="M426 284h138M426 304h138M426 324h100M426 360h138M426 380h138M426 400h80" stroke="#2a1c12" stroke-width="3" opacity=".55"/><circle cx="495" cy="216" r="6" fill="#b3261e"/></g>' +
           win(660, rainWin(41, 250, 255)) +
           // 11시 59분에 멈춘 벽시계
-          '<g pointer-events="none"><circle cx="1266" cy="300" r="46" fill="url(#gBrass)"/><circle cx="1266" cy="300" r="38" fill="#efe2c4"/>' +
+          '<g class="hot" data-id="clock1" tabindex="0" role="button" aria-label="멈춘 벽시계"><circle cx="1266" cy="300" r="46" fill="url(#gBrass)"/><circle cx="1266" cy="300" r="38" fill="#efe2c4"/>' +
           Array.from({ length: 12 }, (_, i) => {
             const a = (i * 30 * Math.PI) / 180;
             return (
@@ -2888,8 +2962,8 @@
             );
           }).join('') +
           '<line x1="1266" y1="300" x2="1265.8" y2="280" stroke="#2a1c12" stroke-width="4" stroke-linecap="round"/><line x1="1266" y1="300" x2="1263" y2="270" stroke="#2a1c12" stroke-width="2.5" stroke-linecap="round"/><circle cx="1266" cy="300" r="3.5" fill="#2a1c12"/></g>' +
-          // 창 아래 벤치: 꺼진 신호등, 보온병, 승무원 모자
-          '<g pointer-events="none"><rect x="640" y="650" width="300" height="16" rx="3" fill="#5a3320"/><rect x="660" y="666" width="14" height="60" fill="#3b2115"/><rect x="906" y="666" width="14" height="60" fill="#3b2115"/>' +
+          // 은퇴 축하 자리: 종이 띠, 벤치 위 신호등·보온병·승무원 모자
+          '<g class="hot" data-id="farewell" tabindex="0" role="button" aria-label="은퇴 축하 자리"><path d="M648 506Q785 546 922 506" fill="none" stroke="#8a6223" stroke-width="2.5"/><g transform="translate(690 513) rotate(8)"><rect x="-21" y="0" width="42" height="50" rx="2" fill="#f4eedd" stroke="#6e4a1c"/><text x="0" y="35" text-anchor="middle" font-size="27" font-weight="800" fill="#2a1c12" font-family="Nanum Myeongjo,serif">감</text></g><g transform="translate(738 521) rotate(4)"><rect x="-21" y="0" width="42" height="50" rx="2" fill="#f2d98a" stroke="#6e4a1c"/><text x="0" y="35" text-anchor="middle" font-size="27" font-weight="800" fill="#2a1c12" font-family="Nanum Myeongjo,serif">사</text></g><g transform="translate(785 524) rotate(0)"><rect x="-21" y="0" width="42" height="50" rx="2" fill="#f4eedd" stroke="#6e4a1c"/><text x="0" y="35" text-anchor="middle" font-size="27" font-weight="800" fill="#2a1c12" font-family="Nanum Myeongjo,serif">합</text></g><g transform="translate(832 521) rotate(-4)"><rect x="-21" y="0" width="42" height="50" rx="2" fill="#f2d98a" stroke="#6e4a1c"/><text x="0" y="35" text-anchor="middle" font-size="27" font-weight="800" fill="#2a1c12" font-family="Nanum Myeongjo,serif">니</text></g><g transform="translate(880 513) rotate(-8)"><rect x="-21" y="0" width="42" height="50" rx="2" fill="#f4eedd" stroke="#6e4a1c"/><text x="0" y="35" text-anchor="middle" font-size="27" font-weight="800" fill="#2a1c12" font-family="Nanum Myeongjo,serif">다</text></g><rect x="640" y="650" width="300" height="16" rx="3" fill="#5a3320"/><rect x="660" y="666" width="14" height="60" fill="#3b2115"/><rect x="906" y="666" width="14" height="60" fill="#3b2115"/>' +
           '<path d="M690 600q22 -24 44 0" fill="none" stroke="#2a160d" stroke-width="5"/><rect x="688" y="600" width="48" height="50" rx="6" fill="#232b22"/><rect x="696" y="608" width="32" height="34" rx="4" fill="#4a5a52"/><rect x="684" y="596" width="56" height="8" rx="3" fill="url(#gBrass)"/>' +
           '<rect x="770" y="590" width="30" height="60" rx="6" fill="#6b1d1f"/><rect x="774" y="578" width="22" height="16" rx="4" fill="#b9b3a4"/>' +
           '<path d="M836 650q0 -30 40 -30q40 0 40 30Z" fill="#141c2b"/><rect x="828" y="644" width="96" height="8" rx="4" fill="#0c1220"/><rect x="840" y="636" width="72" height="6" fill="url(#gBrass)"/></g>' +
@@ -3144,6 +3218,7 @@
       { id: 'musicbox', label: '추억의 오르골', type: 'lock', done: F('mbox') },
       { id: 'menu', label: '메뉴판', type: 'clue' },
       { id: 'receipt', label: '식탁 위 영수증', type: 'clue' },
+      { id: 'diners', label: '식사하던 연인', type: 'look' },
       {
         id: 'door',
         label: '2호차 연결문',
@@ -3156,6 +3231,8 @@
       { id: 'starbox', label: '별이 새겨진 상자', type: 'lock', done: F('sbox') },
       { id: 'calendar', label: '벽 달력', type: 'clue' },
       { id: 'book', label: '그림책', type: 'clue' },
+      { id: 'child', label: '잠든 아이', type: 'look' },
+      { id: 'reserved', label: '예약석', type: 'look' },
       { id: 'stars', label: '창밖의 별자리', type: 'clue' },
       {
         id: 'door',
@@ -3170,6 +3247,8 @@
       { id: 'door', label: '기관실 연결문', type: 'lock', done: F('cabdoor') },
       { id: 'notice', label: '운행 안내문', type: 'clue' },
       { id: 'plaque', label: '문 옆 명판', type: 'clue' },
+      { id: 'farewell', label: '은퇴 축하 자리', type: 'look' },
+      { id: 'clock1', label: '멈춘 벽시계', type: 'look' },
     ],
     0: [
       { id: 'bench', label: '회중시계 고치기', type: 'lock', done: F('fixed') },
@@ -3323,6 +3402,8 @@
         '멈춘 열차 안에서 움직일 수 있는 사람은 나뿐이다.<br>아마도, 이 케이스 때문에.',
       ]);
       addItem('case');
+      // 얻자마자 케이스를 바로 보여 준다
+      showItem('case', 1);
     }
     if (run === busyRun) setBusy(false);
   }
@@ -3413,8 +3494,10 @@
             S.flags.case4 = 1;
             render();
             addItem('spring');
-            say('가방 안쪽 주머니에서 금빛 태엽이 나왔다. 3호차로 가는 문에서 딸깍 소리가 난다.');
-            showItem('spring', 1);
+            say(
+              '가방 안쪽 주머니에서 금빛 태엽과 일기 한 장이 나왔다. 3호차로 가는 문에서 딸깍 소리가 난다.',
+            );
+            gotPart('spring');
           },
         });
       },
@@ -3424,6 +3507,11 @@
     },
     // 3호차 물건별 동작
     3: {
+      diners() {
+        look(
+          '포크와 찻잔을 든 채 멈춘 두 사람. 마주 보며 웃던 얼굴 그대로다. 오래전 이 식당칸에서 처음 마주 앉았던 누군가도 이런 표정이었을까.',
+        );
+      },
       menu() {
         openModal({
           k: '단서',
@@ -3459,7 +3547,9 @@
       },
       musicbox() {
         if (S.flags.mbox)
-          return look('오르골은 열려 있다. 멜로디는 한 음에서 멈춘 채 울리지 않는다.');
+          return look(
+            '오르골은 열려 있다. 멜로디는 한 음에서 멈춘 채 울리지 않는다. 뚜껑 안쪽에는 일기 한 장이 끼워져 있던 자국이 남아 있다.',
+          );
         const b = openModal({
           k: '퍼즐',
           title: '추억의 오르골',
@@ -3501,8 +3591,10 @@
                   closeModal();
                   render();
                   addItem('gear');
-                  say('오르골이 열리며 짧은 멜로디가 흐르다 멈춘다. 안에서 톱니바퀴가 나왔다.');
-                  showItem('gear', 1);
+                  say(
+                    '오르골이 열리며 짧은 멜로디가 흐르다 멈춘다. 안에서 톱니바퀴와, 접힌 일기 한 장이 나왔다.',
+                  );
+                  gotPart('gear');
                 }, 700);
               } else {
                 A.bad();
@@ -3524,6 +3616,14 @@
     },
     // 2호차 물건별 동작
     2: {
+      reserved() {
+        look(
+          '좌석에 낡은 “예약석” 표가 붙어 있고, 노란 우산 하나가 기대어 있다. 표 귀퉁이에 “윤정”이라는 이름이 흐릿하게 남아 있다. 수십 년째 아무도 앉지 않은 자리 같다.',
+        );
+      },
+      child() {
+        look('그림책을 읽다 잠든 아이. 작은 손가락이 마지막 장의 낙서 위에 얹혀 있다.');
+      },
       calendar() {
         const mk = { 2: '점검', 14: 'U', 21: '교대', 27: '정비' };
         let g =
@@ -3609,8 +3709,8 @@
             S.flags.sbox = 1;
             render();
             addItem('hand');
-            say('상자 안에 시계바늘이 가지런히 놓여 있다.');
-            showItem('hand', 1);
+            say('상자 안에 시계바늘이 가지런히 놓여 있다. 그 아래 일기 한 장이 깔려 있다.');
+            gotPart('hand');
           },
         });
       },
@@ -3620,6 +3720,16 @@
     },
     // 1호차 물건별 동작
     1: {
+      farewell() {
+        look(
+          '승무원들이 몰래 준비한 은퇴 축하 자리. 창 아래에 “감사합니다” 종이 띠가 걸려 있고, 벤치에는 기관사에게 씌워 줄 새 모자와 따뜻한 보온병이 놓여 있다. 축하는 시작도 못 한 채 멈췄다.',
+        );
+      },
+      clock1() {
+        look(
+          '11시 59분에 멈춘 벽시계. 이 열차의 시계는 모두 같은 시각에서 멈췄다. 자정까지, 꼭 1분을 남겨 두고.',
+        );
+      },
       notice() {
         openModal({
           k: '단서',
@@ -3648,7 +3758,7 @@
             addItem('diary4');
             addItem('glass');
             say('보관함에서 마지막 일기와 유리조각이 나왔다.');
-            showItem('diary4', 1);
+            gotPart('glass');
           },
         });
       },
@@ -3697,7 +3807,7 @@
           k: '퍼즐',
           title: '물품 보관함',
           wide: 1,
-          html: '<p>주인을 찾지 못한 편지와 엽서가 잔뜩 쌓여 있다. 이 가운데 기관사 앞으로 온 것이 있을지도 모른다.</p><div class="hint"><b>힌트</b>일기 속 그녀는 늘 무엇을 쓰고 있었나. 그리고 받는 사람의 이름을 정확히.</div><div class="lost" style="margin-top:14px"></div><p class="msg"></p>',
+          html: '<p>주인을 찾지 못한 편지와 엽서가 잔뜩 쌓여 있다. 그 사이 깊숙이, 기관사가 넣어 두고 꺼내지 못한 것이 있을지도 모른다.</p><div class="hint"><b>힌트</b>일기 속 그녀는 늘 무엇을 쓰고 있었나. 그리고 받는 사람의 이름을 정확히.</div><div class="lost" style="margin-top:14px"></div><p class="msg"></p>',
         });
         const g = b.querySelector('.lost'),
           msg = b.querySelector('.msg');
@@ -3727,7 +3837,9 @@
                 closeModal();
                 render();
                 addItem('letter');
-                say('노란 우산이 그려진 편지. 겉봉에 “한시원에게”라고 적혀 있다.');
+                say(
+                  '노란 우산이 그려진 편지. 겉봉에 “한시원에게”라고 적혀 있다. 소인은 3월 13일, 그녀가 떠나기 전날이다.',
+                );
                 showItem('letter', 1);
               } else {
                 A.bad();
@@ -3782,6 +3894,8 @@
             };
             g.append(bt);
           }
+          // 달마다 주 수가 달라도 항상 6줄을 채워 팝업 높이를 고정한다
+          for (let i = first + days; i < 42; i++) g.append(el('span', '', ''));
         };
         b.querySelector('#calp').onclick = () => {
           if (y === 2026 && m === 1) return;
@@ -3898,6 +4012,9 @@
             ],
             '윤정의 목소리',
           );
+          await speak([
+            '굳어 있던 기관사의 눈가에 눈물 한 방울이 맺힌다.<br>떨어지지 못한 채, 그 자리에 머문다.',
+          ]);
           S.flags.given = 1;
           render();
           A.tick();
@@ -4157,9 +4274,43 @@
 
     if (!alive()) return;
 
+    // 인트로에서 멈췄던 박수가 이어진다
+    A.applause(3);
+    await tell(
+      '멈췄던 박수 소리가 객실에서 다시 이어진다.<br>' +
+        '기관사의 눈에 맺혀 있던 눈물이 그제야 떨어진다.',
+      4200,
+    );
+
+    if (!alive()) return;
+
+    await tell(
+      '“윤정 씨, 약속은 끝까지 지켰어요.<br>' +
+        '이제 나도, 내 길을 가 볼게요.”' +
+        '<small>한시원</small>',
+      4800,
+    );
+
+    if (!alive()) return;
+
     await tell(
       '창밖의 별들이 천천히 자리를 옮긴다.<br>' + '밤하늘 너머로 새벽빛이 스며든다.',
       3800,
+    );
+
+    if (!alive()) return;
+
+    await tell(
+      '종착역, 새벽역.<br>' + '아무도 없는 승강장에, 그는 마지막으로 열차를 세운다.',
+      4600,
+    );
+
+    if (!alive()) return;
+
+    // 주인공의 마무리
+    await tell(
+      '주머니는 다시 가벼워졌다.<br>' + '승강장에 내리며, 나는 기관실 쪽을 한 번 돌아본다.',
+      4400,
     );
 
     if (!alive()) return;
