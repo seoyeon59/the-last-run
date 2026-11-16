@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>시간이 멈춘 열차</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -41,9 +41,9 @@
       <button id="board" type="button">탑승하기</button>
     </div>
   </div>
-  <button id="sndOn" class="snd" type="button" aria-pressed="true">
+  <button id="sndOn" class="snd" type="button" aria-pressed="false">
       <span class="ic" aria-hidden="true">♪</span>
-      <span id="sndTxt">소리 끄기 · 탑승하면 재생</span>
+      <span id="sndTxt">소리 켜기 · 빗소리 들어보기</span>
   </button>
   <p class="note">소리를 켜고 플레이하면 더 좋습니다. 진행 시간은 15분 안팎입니다.</p>
 </section>
@@ -151,7 +151,8 @@
   <div class="estage">
   <p id="eline"></p>
   <div id="eend">
-    <h2>시간은 다시 흐른다</h2>
+    <h2>시간이 멈춘 열차</h2>
+    <p class="sub">시간은 다시 흐른다</p>
     <p>과거에 머물고 싶은 마음과,<br>
         그럼에도 앞으로 흘러가야 하는 시간에 관한 이야기.</p>
     <button class="btn" id="again" type="button">처음부터 다시 타기</button>
@@ -168,6 +169,8 @@
         <span class="txt">화면을 눌러 계속</span>
     </div>
 </div>
+<div id="carcard" role="dialog" aria-modal="true"><small></small><strong></strong><div class="rule"></div><p></p><div class="nudge" id="cnudge" aria-hidden="true"><span class="tri"></span><span class="txt">화면을 눌러 계속</span></div></div>
+<div id="rotate" role="alert"><svg viewBox="0 0 64 64" aria-hidden="true"><rect x="22" y="8" width="20" height="40" rx="4" fill="none" stroke="#c79a4b" stroke-width="3"/><circle cx="32" cy="43" r="1.8" fill="#c79a4b"/><path d="M14 54q18 8 36 0" fill="none" stroke="#f0cf7e" stroke-width="3" stroke-linecap="round"/><path d="M46 50l5 3-6 3" fill="none" stroke="#f0cf7e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><p>화면을 가로로 돌려 주세요</p><small>이 게임은 가로 화면에서 플레이합니다</small></div>
 <div id="toast" role="status"></div>
 
 <script src="script.js"></script>

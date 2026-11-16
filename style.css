@@ -492,46 +492,6 @@ button {
 }
 
 /* 물방울: 시계를 위에서 내려다보는 시점. 방울이 크게 보이다가 유리 위로 똑 떨어지고 파문이 퍼진다 */
-#iwatch .dp {
-  position: absolute;
-  width: 0;
-  height: 0;
-  pointer-events: none;
-}
-
-#iwatch .dp.big .d {
-  left: -12px;
-  top: -12px;
-  width: 24px;
-  height: 24px;
-}
-
-#iwatch .dp .d {
-  position: absolute;
-  left: -8px;
-  top: -8px;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: #8b9098;
-  opacity: 0.85;
-  animation: dfall 0.55s cubic-bezier(0.5, 0, 0.9, 0.6) both;
-}
-
-@keyframes dfall {
-  0% {
-    transform: scale(3);
-    opacity: 0;
-  }
-  30% {
-    opacity: 0.85;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 0.85;
-  }
-}
-
 .crack {
   opacity: 0;
 }
@@ -2733,4 +2693,200 @@ header.top {
 /* 우편물을 고를 때 안내 문구 자리(세 줄 + 버튼)를 미리 잡아 둔다 */
 .panel .lost ~ .msg {
   min-height: 8.6em;
+}
+
+
+/* ───── 호차 진입 카드 (눌러서 계속) ───── */
+#carcard {
+  position: fixed;
+  inset: 0;
+  z-index: 24;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 24px;
+  text-align: center;
+  background: radial-gradient(ellipse at 50% 45%, #1c120c 0%, #070504 80%);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.6s;
+}
+#carcard.on { display: flex; }
+#carcard.show { opacity: 1; }
+#carcard small {
+  font-family: var(--font-type);
+  letter-spacing: 0.5em;
+  padding-left: 0.5em;
+  color: var(--brass);
+  font-size: clamp(13px, 1.6vw, 18px);
+}
+#carcard strong {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(40px, 8vw, 104px);
+  letter-spacing: 0.1em;
+  padding-left: 0.1em;
+  line-height: 1.2;
+  background: linear-gradient(180deg, #fffbe8, var(--gold) 50%, #8a6223);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+#carcard .rule {
+  height: 1px;
+  width: min(520px, 70vw);
+  margin: 14px 0 18px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+#carcard p {
+  margin: 0;
+  font-size: clamp(17px, 2.2vw, 25px);
+  line-height: 1.8;
+  max-width: 30em;
+  color: var(--paper);
+  word-break: keep-all;
+  text-wrap: balance;
+}
+#carcard .nudge { bottom: 34px; }
+/* 첫 독백은 게임 화면이 비치지 않게 완전히 어둡게 */
+#voice.solid { background: #040302; }
+
+/* 처음 들어갔을 때 눌러 볼 곳이 잠깐 반짝인다 */
+#scene.hint .hot { animation: hotPulse 1.3s ease-in-out 4; }
+@keyframes hotPulse {
+  0%, 100% { filter: none; }
+  50% { filter: drop-shadow(0 0 12px rgba(240, 207, 126, 0.95)) brightness(1.25); }
+}
+
+/* 엔딩 부제 */
+#eend .sub {
+  margin: -4px 0 6px;
+  font-family: var(--font-display);
+  font-size: clamp(18px, 2.6vw, 28px);
+  letter-spacing: 0.3em;
+  padding-left: 0.3em;
+  color: #e9d9ae;
+}
+
+
+/* ───── 휴대폰: 세로로 들면 돌려 달라고 안내 ───── */
+#rotate {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 24px;
+  text-align: center;
+  background: radial-gradient(ellipse at 50% 40%, #1c120c, #070504 80%);
+}
+#rotate svg {
+  width: 92px;
+  height: 92px;
+  animation: turnPhone 2.4s ease-in-out infinite;
+}
+#rotate p {
+  margin: 8px 0 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 22px;
+  color: var(--gold);
+}
+#rotate small {
+  color: var(--muted);
+  font-size: 14px;
+}
+@keyframes turnPhone {
+  0%, 25% { transform: rotate(0); }
+  60%, 100% { transform: rotate(-90deg); }
+}
+@media (orientation: portrait) and (max-width: 820px) and (pointer: coarse) {
+  #rotate { display: flex; }
+}
+
+/* ───── 낮은 가로 화면(휴대폰 가로): 장면은 왼쪽 가득, 글과 소지품은 오른쪽 ───── */
+@media (orientation: landscape) and (max-height: 520px) {
+  .wrap {
+    height: 100%;
+    min-height: 0;
+    gap: 4px;
+    padding: 4px max(10px, env(safe-area-inset-right)) 6px max(10px, env(safe-area-inset-left));
+  }
+  header.top { padding-bottom: 4px; gap: 8px; flex-wrap: nowrap; }
+  .logo svg { width: 24px; height: 24px; }
+  .logo h1 { display: none; }
+  .clock { padding: 1px 8px; }
+  .clock .s { display: none; }
+  .clock .t { font-size: 15px; }
+  .tbtn { min-height: 28px; padding: 0 8px; font-size: 12px; }
+  .train { order: 0; flex: 1 1 0; }
+  .car { min-height: 32px; flex-basis: 76px; padding: 9px 4px 3px; font-size: 10px; }
+  .car b { font-size: 12px; }
+  .car::before { top: 3px; height: 4px; }
+  .car.done::after { top: 9px; }
+
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 250px;
+    grid-template-rows: auto auto auto minmax(0, 1fr);
+    gap: 5px 12px;
+    flex: 1;
+    min-height: 0;
+  }
+  .layout > .main { display: contents; }
+  .cartitle { display: none; }
+  .stagebox { grid-column: 1; grid-row: 1 / 5; flex: none; }
+  .scene { width: min(100cqw, calc(100cqh * 16 / 9)); }
+  .goal {
+    grid-column: 2;
+    grid-row: 1;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 4px 8px;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+  .goal::before { font-size: 9px; padding: 1px 6px 1px 8px; }
+  .narr {
+    grid-column: 2;
+    grid-row: 2;
+    flex-wrap: wrap;
+    gap: 6px;
+    min-height: 0;
+    max-height: 100px;
+    padding: 5px 8px;
+  }
+  #say { font-size: 12px; line-height: 1.5; }
+  #next .btn { padding: 5px 10px; font-size: 12px; }
+  .spotsrow { grid-column: 2; grid-row: 3; }
+  .legend { display: none; }
+  .spots { gap: 4px; }
+  .chip { min-height: 26px; padding: 0 9px; font-size: 11px; }
+  .side {
+    grid-column: 2;
+    grid-row: 4;
+    flex: none;
+    min-height: 0;
+    gap: 6px;
+    padding-right: 0;
+  }
+  .box { padding: 8px; }
+  .box h3 { font-size: 14px; margin-bottom: 5px; }
+  .pslots { gap: 4px; margin-bottom: 5px; }
+  .item { padding: 4px 8px; }
+
+  /* 시작 화면도 낮은 화면에 맞춰 줄이기 */
+  #title { gap: 8px; padding: 8px 16px; }
+  #title .eyebrow { margin-bottom: 2px; }
+  #title h1 { font-size: 34px; }
+  .ticket .route { margin: 4px 0; font-size: 20px; }
+  .ticket .main { padding: 10px 14px; }
+  .ticket dl { font-size: 12px; }
+  #sndOn { min-height: 34px; font-size: 13px; }
+  #title .note { display: none; }
 }
