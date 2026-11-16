@@ -58,6 +58,16 @@
 
         for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
         this.nb = b;
+
+        // 사파리 잠금 해제: 사용자 입력 안에서 무음 한 샘플을 재생해 둔다
+        try {
+          const u = this.c.createBuffer(1, 1, 22050),
+            us = this.c.createBufferSource();
+          us.buffer = u;
+          us.connect(this.c.destination);
+          us.start(0);
+          this.c.resume();
+        } catch (e) {}
       } catch (e) {
         this.c = null;
       }
@@ -196,7 +206,12 @@
     },
     // 시계 초침 소리
     tick() {
-      this.noise(0.03, 3200, 6, 0.18, 'bandpass');
+      this.noise(0.035, 3200, 3, 0.45, 'bandpass');
+    },
+    // 자물쇠 숫자를 돌릴 때: 딸깍
+    click() {
+      this.noise(0.045, 2200, 2.5, 0.6, 'bandpass');
+      this.tone(880, 0.06, 0.07, 'triangle');
     },
     // 시계 유리에 금 가는 소리
     crack() {
@@ -206,37 +221,59 @@
     },
     /* 슬픈 장면: 맑은 유리 소리 대신 둔탁하게 부서지는 소리와 낮은 울림 */
     shatter() {
-      this.noise(0.7, 900, 0.7, 0.5, 'lowpass');
-      this.tone(58, 1.1, 0.55, 'sine', 0, 0.01);
+      // 정적 뒤의 갑작스러운 한 방
+      this.noise(0.2, 1100, 0.5, 0.75, 'highpass');
+      this.noise(0.35, 500, 0.7, 0.7, 'lowpass');
+      this.tone(62, 1.4, 0.6, 'sine', 0, 0.004);
+      this.tone(45, 1.8, 0.45, 'sine', 0, 0.004);
+      this.noise(0.5, 2600, 1.2, 0.3, 'bandpass', 0.02);
+      // 이어서 가라앉는 낮은 울림과 귀울림
       this.tone(110, 3.2, 0.07, 'sine', 0.15, 0.6);
       this.tone(130.8, 3.2, 0.045, 'sine', 0.2, 0.8);
+      this.tone(3100, 2.4, 0.025, 'sine', 0.12, 0.3);
       for (let i = 0; i < 9; i++)
         this.noise(
           0.05 + Math.random() * 0.05,
           1800 + Math.random() * 1400,
           5,
-          0.05,
+          0.06,
           'bandpass',
-          0.1 + Math.random() * 1.1,
+          0.15 + Math.random() * 1.1,
         );
     },
-    /* 똑 — 물방울 */
-    drip(w) {
+    /* 게임 중 아주 작게 깔리는 낮은 울림 (멈춘 시간의 공기) */
+    ambient(on) {
       if (!this.c) return;
-      const t = this.c.currentTime + (w || 0),
-        o = this.c.createOscillator(),
-        g = this.c.createGain();
-      o.type = 'sine';
-      o.frequency.setValueAtTime(190, t);
-      o.frequency.exponentialRampToValueAtTime(85, t + 0.09);
-      g.gain.setValueAtTime(0.0001, t);
-      g.gain.linearRampToValueAtTime(0.3, t + 0.004);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.16);
-      o.connect(g);
-      g.connect(this.m);
-      o.start(t);
-      o.stop(t + 0.2);
-      this.noise(0.05, 450, 1, 0.12, 'lowpass', w || 0);
+      const t = this.c.currentTime;
+      if (on && !this.amb) {
+        const g = this.c.createGain();
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.linearRampToValueAtTime(1, t + 3);
+        g.connect(this.m);
+        const mk = (f, v) => {
+          const o = this.c.createOscillator(),
+            gg = this.c.createGain();
+          o.type = 'sine';
+          o.frequency.value = f;
+          gg.gain.value = v;
+          o.connect(gg);
+          gg.connect(g);
+          o.start();
+          return o;
+        };
+        this.amb = { g, o: [mk(55, 0.02), mk(82.41, 0.012), mk(110.5, 0.006)] };
+      } else if (!on && this.amb) {
+        const r = this.amb;
+        this.amb = null;
+        r.g.gain.cancelScheduledValues(t);
+        r.g.gain.setValueAtTime(Math.max(r.g.gain.value, 0.0001), t);
+        r.g.gain.linearRampToValueAtTime(0.0001, t + 1);
+        r.o.forEach((x) => {
+          try {
+            x.stop(t + 1.1);
+          } catch (e) {}
+        });
+      }
     },
     /* 닫힌 문: 덜컹, 덜컹 */
     locked() {
@@ -260,14 +297,14 @@
     },
     /* 단서를 집어 들 때: 종이 스치는 소리 */
     paper() {
-      this.noise(0.16, 4200, 1, 0.06, 'highpass');
-      this.noise(0.12, 2400, 2, 0.045, 'bandpass', 0.09);
-      this.noise(0.1, 5200, 1, 0.035, 'highpass', 0.2);
+      this.noise(0.16, 4200, 1, 0.2, 'highpass');
+      this.noise(0.12, 2400, 2, 0.15, 'bandpass', 0.09);
+      this.noise(0.1, 5200, 1, 0.1, 'highpass', 0.2);
     },
     /* 물건을 살펴볼 때: 낮은 손끝 소리 */
     tap() {
-      this.noise(0.05, 900, 3, 0.12, 'bandpass');
-      this.tone(196, 0.25, 0.035, 'sine', 0.01);
+      this.noise(0.05, 900, 3, 0.3, 'bandpass');
+      this.tone(196, 0.25, 0.09, 'sine', 0.01);
     },
     // 출발 레버를 당기는 소리
     leverPull() {
@@ -573,16 +610,16 @@
     },
     // 정답 효과음
     ok() {
-      [659, 784, 1047].forEach((f, i) => this.tone(f, 0.9, 0.14, 'triangle', i * 0.11));
+      [659, 784, 1047].forEach((f, i) => this.tone(f, 0.9, 0.22, 'triangle', i * 0.11));
     },
     // 오답 효과음
     bad() {
-      this.tone(110, 0.28, 0.2, 'sawtooth');
-      this.tone(104, 0.28, 0.18, 'sawtooth');
+      this.tone(110, 0.3, 0.3, 'sawtooth');
+      this.tone(104, 0.3, 0.27, 'sawtooth');
     },
     // 물건 획득 효과음
     get() {
-      [880, 1175, 1568].forEach((f, i) => this.tone(f, 1.1, 0.09, 'sine', i * 0.07));
+      [880, 1175, 1568].forEach((f, i) => this.tone(f, 1.1, 0.16, 'sine', i * 0.07));
     },
     /* 시계 부품 화음: 태엽 레 · 톱니바퀴 파# · 바늘 라 · 유리 레-파#-라 */
     chime(fs, w, dur) {
@@ -1659,37 +1696,6 @@
       Nudge.hide();
     } // 화면을 누를 때까지 기다림
   }
-  /* 시계 위로 떨어지는 물방울: 위에서 내려다본 시점(방울이 커 보이다가 똑 — 파문) */
-  let dripOn = false,
-    dripT = 0;
-  // 시계에서 떨어지는 눈물 한 방울 만들기
-  function dripOne(big) {
-    const e = el('div', 'dp' + (big ? ' big' : ''));
-    e.style.left = 50 + (Math.random() - 0.5) * 46 + '%';
-    e.style.top = 55 + (Math.random() - 0.5) * 38 + '%';
-    e.innerHTML = '<i class="d"></i>';
-    iw.appendChild(e);
-    A.drip(0.55);
-    setTimeout(() => e.remove(), 12000);
-  }
-  // 눈물 방울 반복 시작
-  function startDrips() {
-    stopDrips();
-    dripOn = true;
-    let n = 0;
-    const go = () => {
-      if (!dripOn || n >= 3) return;
-      n++;
-      dripOne(n === 3);
-      dripT = setTimeout(go, 1100 + Math.random() * 500);
-    };
-    go();
-  }
-  // 눈물 방울 반복 멈춤
-  function stopDrips() {
-    dripOn = false;
-    clearTimeout(dripT);
-  }
   // 인트로 전체 진행 (터널 → 제목 → 안내 방송 → 시계 파괴)
   async function runIntro() {
     skipFlag = false;
@@ -1767,19 +1773,20 @@
       }
       await line('', '주머니에서 꺼낸 오래된 회중시계.\n바늘은 11시 59분을 가리키고 있다.');
       iw.classList.add('grip');
-      startDrips();
       await line('', '그는 슬픔을 이기지 못하고,\n떨리는 손으로 시계를 감싸 쥔다.');
-      stopDrips();
       A.crack();
       iw.classList.add('cracked');
       await wait(900, true);
       A.crack();
       await wait(500, true);
+      // 깨지기 직전, 모든 소리가 뚝 끊긴다
+      A.rumble(false);
+      A.rain(false, 0.12);
+      A.stopTheme(0.12);
+      await wait(750, true);
       // 산산조각
       A.shatter();
-      A.rumble(false);
-      A.rain(false, 1.6);
-      A.stopTheme(0.5);
+      FX.flash = 0.85;
       iw.classList.remove('grip');
       iw.classList.add('gone');
       FX.frozen = true;
@@ -1816,7 +1823,6 @@
     } catch (e) {
       if (e !== 'skip') throw e;
     }
-    stopDrips();
     A.rumble(false);
     A.rain(false, 1.2);
     A.stopTheme(1.2);
@@ -1837,6 +1843,9 @@
       if ($('#voice').classList.contains('on')) {
         e.preventDefault();
         $('#voice').click();
+      } else if ($('#carcard').classList.contains('on')) {
+        e.preventDefault();
+        $('#carcard').click();
       } else if (
         $('#intro').classList.contains('on') &&
         document.activeElement.id !== 'skip' &&
@@ -1855,21 +1864,39 @@
       }
     }
   });
-  let rainPref = true;
+  // 사파리 등은 '클릭/터치/키 입력' 안에서 만든 오디오만 허용한다 (pointerdown은 인정 안 됨)
+  ['click', 'touchend', 'keydown'].forEach((ev) =>
+    document.addEventListener(
+      ev,
+      () => {
+        A.init();
+        setTimeout(() => {
+          if (A.c && A.c.state !== 'running' && !A.mute) {
+            try {
+              A.c.resume();
+            } catch (e) {}
+            toast('브라우저가 소리를 막고 있어요. 화면을 한 번 더 눌러 주세요');
+          }
+        }, 600);
+      },
+      true,
+    ),
+  );
+  let rainPref = null; // null: 아직 안 눌렀음(탑승하면 켜짐), true: 켬, false: 사용자가 끔
   // 타이틀 화면의 소리 버튼 문구 갱신
   function setSnd(on) {
     const b = $('#sndOn');
 
     b.setAttribute('aria-pressed', on);
 
-    $('#sndTxt').textContent = on ? '소리 켜짐 · 누르면 끕니다' : '소리 꺼짐 · 누르면 켭니다';
+    $('#sndTxt').textContent = on ? '소리 켜짐 · 누르면 끕니다' : '소리 켜기 · 빗소리 들어보기';
   }
 
   $('#sndOn').addEventListener('click', () => {
     A.init();
     if (!A.c) return;
 
-    const on = !rainPref;
+    const on = !A.rn;
     rainPref = on;
 
     A.rain(on, 1.2);
@@ -2237,12 +2264,12 @@
       w.children[0].onclick = () => {
         v[i] = (v[i] + 1) % 10;
         o.textContent = v[i];
-        A.tick();
+        A.click();
       };
       w.children[2].onclick = () => {
         v[i] = (v[i] + 9) % 10;
         o.textContent = v[i];
-        A.tick();
+        A.click();
       };
       e.append(w);
       if (sep && sep.at === i + 1) e.append(el('span', 'sep', sep.ch));
@@ -2283,12 +2310,13 @@
   }
 
   // 화면 전체 독백/대사를 한 줄씩 보여 주기
-  function speak(lines, label) {
+  function speak(lines, label, opt) {
     return new Promise((res) => {
       const v = $('#voice'),
         p = v.querySelector('p');
       let i = 0;
       v.querySelector('small').textContent = label || '';
+      v.classList.toggle('solid', !!(opt && opt.solid));
       const nd = $('#vnudge');
       const next = () => {
         if (i >= lines.length) {
@@ -2765,9 +2793,11 @@
             )
             .join('') +
           // 영수증
-          '<g class="hot" data-id="receipt" tabindex="0" role="button" aria-label="식탁 위 영수증"><path d="M380 590h62v70l-10 -6l-10 6l-11 -6l-10 6l-11 -6l-10 6Z" fill="#fffdf6" stroke="#8d7a5c" transform="rotate(-8 410 620)"/><path d="M388 606h44M388 620h44M388 634h30" stroke="#6b4a2c" stroke-width="2.5" transform="rotate(-8 410 620)"/><ellipse cx="520" cy="622" rx="34" ry="10" fill="#d8cdb6"/><path d="M498 600h44v18q-22 14 -44 0Z" fill="#fff"/></g>' +
+          '<g class="hot" data-id="receipt" tabindex="0" role="button" aria-label="식탁 위 영수증"><g transform="translate(-52 0)"><path d="M380 590h62v70l-10 -6l-10 6l-11 -6l-10 6l-11 -6l-10 6Z" fill="#fffdf6" stroke="#8d7a5c" transform="rotate(-8 410 620)"/><path d="M388 606h44M388 620h44M388 634h30" stroke="#6b4a2c" stroke-width="2.5" transform="rotate(-8 410 620)"/></g><ellipse cx="520" cy="622" rx="34" ry="10" fill="#d8cdb6"/><path d="M498 600h44v18q-22 14 -44 0Z" fill="#fff"/></g>' +
           // 셋째 식탁: 식사하다 멈춘 연인
-          '<g class="hot" data-id="diners" tabindex="0" role="button" aria-label="식사하던 연인"><path d="M1095 582q46 -40 92 0Z" fill="#2a3144"/><path d="M1131 552l10 16l10 -16Z" fill="#56627c"/><circle cx="1141" cy="522" r="30" fill="#4a556f"/><path d="M1110 520Q1110 488 1141 488Q1172 488 1172 520Q1164 503 1146 503Q1124 502 1110 520Z" fill="#161b29"/><path d="M1178 582q16 -10 8 -34l-14 6q4 14 -8 22Z" fill="#2a3144"/><ellipse cx="1182" cy="546" rx="9" ry="7" fill="#4a556f"/><path d="M1184 542l10 -26M1190 517l2 -9M1194 518l3 -8M1198 520l4 -8" stroke="#cfd3d8" stroke-width="2.5" stroke-linecap="round"/><path d="M1289 582q44 -38 88 0Z" fill="#5a2f45"/><path d="M1300 526Q1297 486 1333 486Q1369 486 1366 526L1370 574Q1333 584 1296 574Z" fill="#161b29"/><circle cx="1333" cy="524" r="28" fill="#4a556f"/><path d="M1305 522Q1307 494 1333 493Q1359 494 1361 522Q1350 506 1334 506Q1333 505 1332 506Q1316 506 1305 522Z" fill="#161b29"/><path d="M1292 582q-18 -8 -10 -34l14 6q-4 14 6 22Z" fill="#5a2f45"/><ellipse cx="1288" cy="548" rx="9" ry="7" fill="#4a556f"/><rect x="1266" y="530" width="22" height="18" rx="4" fill="#fff"/><path d="M1266 535q-8 0 -8 5q0 5 8 5" fill="none" stroke="#fff" stroke-width="2.5"/><path d="M1273 524q-4 -7 0 -13q4 -6 0 -12M1282 524q-4 -7 0 -13q4 -6 0 -12" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".4"/></g>' +
+          '<g class="hot" data-id="diners" tabindex="0" role="button" aria-label="식사하던 연인"><g transform="translate(0 8) translate(1235 582) scale(1.12) translate(-1235 -582)"><path d="M1095 582q46 -40 92 0Z" fill="#2a3144"/><path d="M1131 552l10 16l10 -16Z" fill="#56627c"/><circle cx="1141" cy="522" r="30" fill="#4a556f"/><path d="M1110 520Q1110 488 1141 488Q1172 488 1172 520Q1164 503 1146 503Q1124 502 1110 520Z" fill="#161b29"/><path d="M1178 582q16 -10 8 -34l-14 6q4 14 -8 22Z" fill="#2a3144"/><ellipse cx="1182" cy="546" rx="9" ry="7" fill="#4a556f"/><path d="M1184 542l10 -26M1190 517l2 -9M1194 518l3 -8M1198 520l4 -8" stroke="#cfd3d8" stroke-width="2.5" stroke-linecap="round"/><path d="M1289 582q44 -38 88 0Z" fill="#5a2f45"/><path d="M1300 526Q1297 486 1333 486Q1369 486 1366 526L1370 574Q1333 584 1296 574Z" fill="#161b29"/><circle cx="1333" cy="524" r="28" fill="#4a556f"/><path d="M1305 522Q1307 494 1333 493Q1359 494 1361 522Q1350 506 1334 506Q1333 505 1332 506Q1316 506 1305 522Z" fill="#161b29"/><path d="M1292 582q-18 -8 -10 -34l14 6q-4 14 6 22Z" fill="#5a2f45"/><ellipse cx="1288" cy="548" rx="9" ry="7" fill="#4a556f"/><rect x="1266" y="530" width="22" height="18" rx="4" fill="#fff"/><path d="M1266 535q-8 0 -8 5q0 5 8 5" fill="none" stroke="#fff" stroke-width="2.5"/><path d="M1273 524q-4 -7 0 -13q4 -6 0 -12M1282 524q-4 -7 0 -13q4 -6 0 -12" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".4"/></g></g>' +
+          // 오른쪽 식탁보를 연인 앞쪽으로 다시 덮는다 (식탁이 연인보다 앞)
+          '<g pointer-events="none"><path d="M1080 580h310l26 130h-362Z" fill="#f2ece0"/><path d="M1080 580h310l6 30h-322Z" fill="#fff" opacity=".5"/></g>' +
           // 첫 식탁: 두 번째 커피잔과 조각 케이크 (두 사람이 앉았던 자리)
           '<g pointer-events="none"><ellipse cx="470" cy="676" rx="34" ry="10" fill="#d8cdb6"/><path d="M448 654h44v18q-22 14 -44 0Z" fill="#fff"/><ellipse cx="470" cy="655" rx="20" ry="4" fill="#4a2a1a"/><path d="M492 658q12 0 12 7q0 7 -12 7" fill="none" stroke="#fff" stroke-width="3"/>' +
           '<path d="M464 644q-5 -9 0 -16q5 -8 0 -16M476 644q-5 -9 0 -16q5 -8 0 -16" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".35"/>' +
@@ -3166,31 +3196,31 @@
       n: '4호차',
       kind: '객실칸',
       sub: '멈춰버린 시간',
-      goal: '열차에 무슨 일이 생겼는지 확인하고 3호차로 이동하기',
+      goal: '대체 무슨 일이 생긴 거지? 단서를 찾아 3호차로 가 보자.',
     },
     3: {
       n: '3호차',
       kind: '식당칸',
       sub: '두 사람의 추억',
-      goal: '두 사람의 관계를 알아내고 두 번째 시계 부품 찾기',
+      goal: '두 사람은 어떤 사이였을까? 두 번째 시계 부품을 찾아야 한다.',
     },
     2: {
       n: '2호차',
       kind: '객실칸',
       sub: '돌아오지 않는 사람',
-      goal: '윤정에게 무슨 일이 있었는지, 기관사가 왜 슬퍼하는지 알아내기',
+      goal: '윤정에게 무슨 일이 있었던 걸까? 기관사가 왜 슬퍼하는지 알아내야 해.',
     },
     1: {
       n: '1호차',
       kind: '승무원칸',
       sub: '마지막 운행의 진실',
-      goal: '기관사가 슬퍼한 이유를 알아내고 마지막 편지 찾기',
+      goal: '기관사의 슬픔의 이유를 알아내고, 마지막 편지를 찾자.',
     },
     0: {
       n: '기관실',
       kind: '운전실',
       sub: '다시 흐르는 시간',
-      goal: '회중시계를 고치고, 멈춘 열차를 다시 출발시키기',
+      goal: '시계를 고쳐서 이 열차를 다시 달리게 하자.',
     },
   };
   const ORDER = [4, 3, 2, 1, 0];
@@ -3362,6 +3392,61 @@
     $('#game').classList.toggle('busy', on);
   }
   // 객차 들어가기 (문 소리 → 제목 카드 → 소개)
+  const CAR_LINE = {
+    4: '객실 안의 모든 것이 멈춰 있다. 눈에 띄는 것을 눌러 살펴보자.',
+    3: '식당칸이다. 식탁 위에 누군가의 흔적이 남아 있다.',
+    2: '조명이 꺼진 객실. 창밖으로 별이 또렷하게 보인다.',
+    1: '승무원이 쓰는 칸이다. 기관실로 이어지는 철문이 보인다.',
+    0: '기관실. 기관사가 창밖을 바라본 채 멈춰 있다.',
+  };
+  // 호차 이름과 첫 안내를 크게 띄우고, 화면을 누르면 사라진다
+  let carCardDone = null;
+  function showCarCard(c) {
+    if (carCardDone) carCardDone();
+    return new Promise((res) => {
+      const k = $('#carcard');
+      k.querySelector('small').textContent = CARS[c].n + ' · ' + CARS[c].kind;
+      k.querySelector('strong').textContent = CARS[c].sub;
+      k.querySelector('p').textContent = CAR_LINE[c];
+      // 객실이 비치지 않게 서서히가 아니라 한 번에 덮는다
+      k.style.transition = 'none';
+      k.classList.add('on', 'show');
+      void k.offsetWidth;
+      k.style.transition = '';
+      let ready = false;
+      const t1 = setTimeout(() => (ready = true), 600);
+      const t2 = setTimeout(() => Nudge.show($('#cnudge')), 900);
+      const close = () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+        k.removeEventListener('click', onClick);
+        carCardDone = null;
+        Nudge.hide();
+        k.classList.remove('show');
+        setTimeout(() => k.classList.remove('on'), 600);
+        res(); // 카드가 사라지는 동안 객실도 함께 스며들어 나타난다
+      };
+      const onClick = () => {
+        if (ready) close();
+      };
+      carCardDone = close;
+      k.addEventListener('click', onClick);
+    });
+  }
+  // 처음 들어갔을 때 눌러 볼 곳이 반짝여서 알려 준다
+  function hintHotspots() {
+    let n = 0;
+    const iv = setInterval(() => {
+      if (++n > 120) return clearInterval(iv);
+      if ($('#modal').classList.contains('on') || $('#voice').classList.contains('on')) return;
+      clearInterval(iv);
+      const sc = $('#scene');
+      sc.classList.add('hint');
+      toast('반짝이는 물건을 눌러 살펴볼 수 있다');
+      setTimeout(() => sc.classList.remove('hint'), 5600);
+    }, 250);
+  }
+  // 객차 이동: 소개 카드를 누르면 플레이 시작
   async function enterCar(c) {
     const run = ++busyRun;
     setBusy(true);
@@ -3370,40 +3455,30 @@
     S.reached = Math.min(S.reached, c);
     closeModal();
     render();
-    {
-      const sc = $('#scene');
-      sc.classList.remove('enter');
-      void sc.offsetWidth;
-      sc.classList.add('enter');
-    }
-    try {
-      $('#game').scrollTo({ top: 0, behavior: REDUCED ? 'auto' : 'smooth' });
-    } catch (e) {}
-    const k = $('#card');
-    k.firstElementChild.textContent = CARS[c].n;
-    k.lastElementChild.textContent = CARS[c].sub;
-    k.classList.add('show');
-    say(
-      {
-        4: '객실 안의 모든 것이 멈춰 있다. 눈에 띄는 것을 눌러 살펴보자.',
-        3: '식당칸이다. 식탁 위에 누군가의 흔적이 남아 있다.',
-        2: '조명이 꺼진 객실. 창밖으로 별이 또렷하게 보인다.',
-        1: '승무원이 쓰는 칸이다. 기관실로 이어지는 철문이 보인다.',
-        0: '기관실. 기관사가 창밖을 바라본 채 멈춰 있다.',
-      }[c],
-    );
-    setTimeout(() => k.classList.remove('show'), REDUCED ? 900 : 2200);
-    await new Promise((r) => setTimeout(r, REDUCED ? 900 : 2300));
-    if (c === 4 && !S.flags.woke) {
+    const sc = $('#scene');
+    sc.classList.remove('enter');
+    say(CAR_LINE[c]);
+    const first = c === 4 && !S.flags.woke;
+    if (first) {
       S.flags.woke = 1;
-      await speak([
-        '눈을 뜬다. 열차가 멈춰 있다.<br>박수를 치던 사람들도, 창밖의 빗방울도 그대로 굳어 있다.',
-        '주머니가 묵직하다.<br>꺼내 보니 속이 텅 빈 회중시계 케이스가 들어 있다.',
-        '멈춘 열차 안에서 움직일 수 있는 사람은 나뿐이다.<br>아마도, 이 케이스 때문에.',
-      ]);
+      await speak(
+        [
+          '눈을 뜬다. 열차가 멈춰 있다.<br>박수를 치던 사람들도, 창밖의 빗방울도 그대로 굳어 있다.',
+          '주머니가 묵직하다.<br>꺼내 보니 속이 텅 빈 회중시계 케이스가 들어 있다.',
+          '멈춘 열차 안에서 움직일 수 있는 사람은 나뿐이다.<br>아마도, 이 케이스 때문에.',
+        ],
+        '',
+        { solid: true },
+      );
+    }
+    await showCarCard(c);
+    void sc.offsetWidth;
+    sc.classList.add('enter');
+    if (first) {
       addItem('case');
       // 얻자마자 케이스를 바로 보여 준다
       showItem('case', 1);
+      hintHotspots();
     }
     if (run === busyRun) setBusy(false);
   }
@@ -3413,6 +3488,7 @@
     cx.clearRect(0, 0, W, H);
     S.started = true;
     show('game');
+    A.ambient(true);
     enterCar(S.car);
   }
   let leverBusy = false;
@@ -4121,12 +4197,14 @@
     endRun++;
 
     A.rumble(false);
+    A.ambient(false);
     A.stopPiece(1.2);
     A.stopTheme(0.6);
     A.rain(false, 0.6);
+    if (carCardDone) carCardDone();
 
-    rainPref = true;
-    setSnd(true);
+    rainPref = null;
+    setSnd(false);
 
     S = fresh();
     closeModal();
@@ -4163,6 +4241,7 @@
     A.init();
     A.rain(false, 0.6);
     A.rumble(false);
+    A.ambient(false);
     A.stopPiece(0.4);
 
     ee.classList.remove('on');
@@ -4170,7 +4249,7 @@
     ln.style.opacity = 1;
 
     // 11시 59분 50초에서 시작
-    ew.innerHTML = watchSVG({ s: 300 });
+    ew.innerHTML = watchSVG({ s: 0 });
     ew.style.display = '';
 
     const sh = ew.querySelector('.sh');
@@ -4198,12 +4277,16 @@
     if (!alive()) return;
 
     /* 2. 초침이 다시 움직이기 시작 */
+    // 11시 59분 정각(초침 12 위치)에서 출발: 처음엔 느리게 똑, 똑 — 점점 빨라져 자정에 닿는다
     const midnight = (async () => {
-      for (let i = 1; i <= 10; i++) {
-        await sleep(1000);
+      for (let i = 1; i <= 60; i++) {
+        const gap = i <= 4 ? 1000 : Math.max(55, 900 * Math.pow(0.86, i - 5));
+        await sleep(gap);
         if (!alive()) return;
 
-        sh.setAttribute('transform', `rotate(${300 + i * 6})`);
+        sh.setAttribute('transform', `rotate(${i * 6})`);
+        mh.setAttribute('transform', `rotate(${354 + i * 0.1})`);
+        hh.setAttribute('transform', `rotate(${359.5 + i * (0.5 / 60)})`);
 
         A.tick();
 
@@ -4217,10 +4300,7 @@
         }
 
         // 11:59:59 -> 00:00:00
-        if (i === 10) {
-          mh.setAttribute('transform', 'rotate(360)');
-          hh.setAttribute('transform', 'rotate(360)');
-
+        if (i === 60) {
           A.bell();
           A.bell(1.6);
           A.bell(3.2);
@@ -4249,7 +4329,6 @@
 
     // 기적 소리, 바퀴 소리, 엔딩 음악
     A.whistle();
-    A.rumble(true);
     A.piece();
 
     /* 시계는 엔딩 이후에도 계속 움직인다 */
