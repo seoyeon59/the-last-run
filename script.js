@@ -2116,14 +2116,22 @@
     letter: '“한시원에게”. 단단히 봉인되어 있다',
   };
   const DOCS = ['diary1', 'diaryWatch', 'diaryAnniv', 'diaryWard', 'diary3', 'diary4'];
-  // 손글씨 글꼴은 글자 묶음별로 나눠 받아지므로, 일기에 쓰인 글자를 미리 받아 둔다
-  // (처음 보는 글자만 늦게 바뀌어 보이는 일 없이, 모든 일기가 같은 효과로 나타나게)
+  // 손글씨 글꼴은 글자 묶음별로 나눠 받아진다. 일기에 쓰이는 글자를 미리 받아 두어,
+  // 실제 다운로드 때문에 일기마다 바뀌는 시점이 달라지는 일이 없게 한다.
   try {
     const handText = DOCS.map((id) => ITEMS[id].view())
       .join('')
       .replace(/<[^>]+>/g, '');
-    document.fonts.load('25px "Nanum Pen Script"', handText + '자정에, 새벽역에서. — 윤정');
+    document.fonts.load('25px "Nanum Pen Script"', handText);
   } catch (e) {}
+  // 일기를 열 때마다: 먼저 바탕 글꼴로 보였다가 잠시 뒤 손글씨로 바뀐다 (모든 일기에 똑같이)
+  const HAND_SWAP_MS = 400;
+  function handSwap(body) {
+    const h = body && body.querySelector('.hand');
+    if (!h) return;
+    h.classList.add('pre');
+    setTimeout(() => h.classList.remove('pre'), HAND_SWAP_MS);
+  }
   // 소지품 보유 여부
   const has = (id) => S.inv.includes(id);
   // 모은 시계 부품 개수
@@ -2223,9 +2231,18 @@
   // id: 부품 아이디. 부품과 짝지어진 일기(PART_DOC)를 함께 소지품에 넣고,
   // 부품 팝업 아래에 '함께 나온 일기 읽기' 버튼을 붙인다.
   function gotPart(id) {
-    addItem(id);
     const doc = PART_DOC[id];
+    addItem(id, true);
     addItem(doc, true);
+    // 소리와 알림은 한 번에: 부품과 일기를 함께 얻었다고 알려 준다
+    A.get();
+    toast(
+      '소지품 획득 · ' +
+        ITEMS[id].n +
+        '  +  기관사의 일기 · ' +
+        ITEMS[doc].n.replace('일기 · ', ''),
+    );
+    renderSide(doc);
     showItem(id, 1);
     const acts = el(
       'div',
@@ -2244,6 +2261,7 @@
     const it = ITEMS[id];
     pendingSay = REFLECT[id] && !S.flags['r_' + id] ? id : null;
     const b = openModal({ k: got ? '획득' : '소지품', title: it.n, html: it.view() });
+    handSwap(b);
     if (it.after) it.after(b);
   }
 
@@ -3289,19 +3307,19 @@
       n: '3호차',
       kind: '식당칸',
       sub: '두 사람의 추억',
-      goal: '두 사람은 어떤 사이였을까? 두 번째 시계 부품을 찾아야 한다.',
+      goal: '두 사람은 어떤 사이였을까? 두 번째 시계 부품을 찾아보자.',
     },
     2: {
       n: '2호차',
       kind: '객실칸',
       sub: '돌아오지 않는 사람',
-      goal: '윤정에게 무슨 일이 있었던 걸까? 기관사가 왜 슬퍼하는지 알아내야 해.',
+      goal: '윤정에게 무슨 일이 있었던 걸까? 이 칸에 남은 기록을 찾아보자.',
     },
     1: {
       n: '1호차',
       kind: '승무원칸',
       sub: '마지막 운행의 진실',
-      goal: '기관사의 슬픔의 이유를 알아내고, 마지막 편지를 찾자.',
+      goal: '기관사가 왜 슬퍼했는지 알아내고, 마지막 편지를 찾자.',
     },
     0: {
       n: '기관실',
@@ -3535,7 +3553,7 @@
       const sc = $('#scene');
       sc.classList.add('hint');
       toast('반짝이는 물건을 눌러 살펴볼 수 있다');
-      setTimeout(() => sc.classList.remove('hint'), 5600);
+      setTimeout(() => sc.classList.remove('hint'), 2800);
     }, 250);
   }
   // 객차 이동: 소개 카드를 누르면 플레이 시작
@@ -4103,7 +4121,9 @@
         if (S.flags.fixed)
           return look('회중시계가 작업대 위에서 조용히 빛나고 있다. 초침은 아직 움직이지 않는다.');
         const placed = {},
-          names = { spring: '태엽', gear: '톱니바퀴', hand: '시계바늘', glass: '유리조각' };
+          names = { spring: '태엽', gear: '톱니바퀴', hand: '시계바늘', glass: '유리조각' },
+          // 받침이 있으면 '을', 없으면 '를'
+          objs = { spring: '태엽을', gear: '톱니바퀴를', hand: '시계바늘을', glass: '유리조각을' };
         const b = openModal({
           k: '최종 퍼즐',
           title: '회중시계 고치기',
@@ -4140,7 +4160,7 @@
             bt.disabled = true;
             A.tick();
             A.part(id);
-            msg.textContent = names[id] + '을(를) 끼웠다.';
+            msg.textContent = objs[id] + ' 끼웠다.';
             draw();
             if (Object.keys(placed).length === 4) {
               S.flags.fixed = 1;
@@ -4352,8 +4372,13 @@
     ln.innerHTML = '';
     ln.style.opacity = 1;
 
-    // 11시 59분 50초에서 시작
-    ew.innerHTML = watchSVG({ s: 0 });
+    // 11시 59분 50초에서 멈춘 시계로 시작 (초침 10 위치, 자정까지 10초)
+    const START_SEC = 50;
+    ew.innerHTML = watchSVG({
+      s: START_SEC * 6,
+      m: 354 + START_SEC * 0.1,
+      h: 359.5 + START_SEC * (0.5 / 60),
+    });
     ew.style.display = '';
 
     const sh = ew.querySelector('.sh');
@@ -4381,11 +4406,10 @@
     if (!alive()) return;
 
     /* 2. 초침이 다시 움직이기 시작 */
-    // 11시 59분 정각(초침 12 위치)에서 출발: 처음엔 느리게 똑, 똑 — 점점 빨라져 자정에 닿는다
+    // 11시 59분 50초에서 출발: 1초에 한 칸씩 똑, 똑 — 10초 뒤 자정에 닿는다
     const midnight = (async () => {
-      for (let i = 1; i <= 60; i++) {
-        const gap = i <= 4 ? 1000 : Math.max(55, 900 * Math.pow(0.86, i - 5));
-        await sleep(gap);
+      for (let i = START_SEC + 1; i <= 60; i++) {
+        await sleep(1000);
         if (!alive()) return;
 
         sh.setAttribute('transform', `rotate(${i * 6})`);
@@ -4395,7 +4419,7 @@
         A.tick();
 
         // 첫 초침이 움직일 때 세상도 깨어난다
-        if (i === 1) {
+        if (i === START_SEC + 1) {
           ending.dataset.phase = 'waking';
           setMode('endWake');
 

@@ -1037,26 +1037,6 @@ header.top {
   opacity: 1;
 }
 
-/* 칸에 들어설 때 잠깐 보이는 제목 카드 */
-#card {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: rgba(5, 4, 3, 0.82);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.8s;
-  text-align: center;
-  z-index: 4;
-}
-
-#card.show {
-  opacity: 1;
-}
-
 /* 객차 소개가 끝나기 전에는 누를 수 없다 */
 #game.busy #scene,
 #game.busy #spots,
@@ -1067,23 +1047,6 @@ header.top {
 #game.busy #spots {
   opacity: 0.45;
   transition: opacity 0.3s;
-}
-
-#card small {
-  font-family: var(--font-type);
-  letter-spacing: 0.5em;
-  padding-left: 0.5em;
-  color: var(--brass);
-  font-size: 13px;
-}
-
-#card strong {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: clamp(28px, 5vw, 56px);
-  letter-spacing: 0.12em;
-  padding-left: 0.12em;
-  color: var(--gold);
 }
 
 /* 내레이션 줄과 '다음 칸으로' 버튼 */
@@ -2860,7 +2823,7 @@ header.top {
 
 /* 처음 들어갔을 때 눌러 볼 곳이 잠깐 반짝인다 */
 #scene.hint .hot {
-  animation: hotPulse 1.3s ease-in-out 4;
+  animation: hotPulse 1.3s ease-in-out 2;
 }
 @keyframes hotPulse {
   0%,
@@ -3103,20 +3066,7 @@ header.top {
   }
 }
 
-/* 일기: 어떤 경로로 열어도 잉크가 번지듯 천천히 떠오른다 */
-.panel .hand {
-  animation: inkIn 0.9s ease both;
-}
-
-@keyframes inkIn {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-    filter: blur(2px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-    filter: none;
-  }
+/* 일기를 열 때 잠깐 바탕 글꼴로 보이는 순간 (script.js의 handSwap) */
+.hand.pre {
+  font-family: "Gowun Batang", serif;
 }

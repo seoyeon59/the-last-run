@@ -1,0 +1,3 @@
+# 모든 텍스트 파일을 LF 줄바꿈으로 저장소와 작업 폴더에 통일한다
+# (Windows의 core.autocrlf 설정과 상관없이 같은 형식을 쓰게 해서, 줄바꿈만 바뀐 diff를 막는다)
+* text=auto eol=lf

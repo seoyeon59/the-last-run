@@ -1,0 +1,10 @@
+# 편집기마다 들여쓰기·줄바꿈이 달라 저장할 때 파일이 통째로 바뀌는 일을 막는다
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 2
+insert_final_newline = true
+trim_trailing_whitespace = true
