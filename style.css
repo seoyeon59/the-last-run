@@ -1,4 +1,28 @@
-/* ───── 색·글꼴 변수 ───── */
+/* =====================================================================
+   시간이 멈춘 열차 — 스타일
+
+   차례
+     1. 색·글꼴 변수, 기본 설정
+     2. 시작 화면 (승차권, 탑승하기)
+     3. 오프닝 (검은 띠, 큰 제목, 자막, 회중시계, 건너뛰기, 계속 표시)
+     4. 게임 화면 (윗줄, 노선표, 장면, 내레이션, 살펴볼 곳, 오른쪽 패널, 알림)
+     5. 팝업 (퍼즐 자물쇠, 일기·신문·영수증 등 단서 양식, 달력, 우편물, 작업대)
+     6. 화면 전체 대사 (#voice)
+     7. 엔딩
+     8. 객차별 조명·그림자·필름 질감
+     9. 엔딩 조명 변화 (새벽빛, 시계 밝기)
+    10. 윤정의 사진 (폴라로이드)
+    11. 디테일 (금빛 파편, 장면 전환, 내레이션 전환)
+    12. 호차 진입 카드, 휴대폰 화면 대응
+    13. 일기 등장 효과
+
+   색은 :root 변수로만 바꾸면 전체에 반영됩니다.
+   움직임 줄이기 설정을 켠 사용자에게는 애니메이션을 거의 멈춥니다.
+   ===================================================================== */
+
+/* ───── 1. 색·글꼴 변수 ─────
+   밤(night)·그을음(soot)·호두나무(walnut)·마룬 객차색 위에
+   놋쇠(brass)와 금빛(gold)만 강조색으로 씁니다. */
 :root {
   /* 배치: 밤의 야간열차. 어두운 호두나무와 마룬 객차 위에 놋쇠 금빛 하나만 강조색으로 쓴다. 화면은 노선표 / 객실 / 내레이션 / 소지품 네 줄. */
   --night: #080b15;
@@ -22,7 +46,9 @@
   color-scheme: dark;
 }
 
-/* ───── 기본 설정 ───── */
+/* ───── 1-2. 기본 설정 ─────
+   여백 초기화, 배경 캔버스, 화면(.screen) 전환 규칙.
+   .screen은 한 번에 하나만 .on으로 보입니다. */
 * {
   box-sizing: border-box;
 }
@@ -54,6 +80,7 @@ button {
   outline-offset: 3px;
 }
 
+/* 배경 캔버스: 모든 화면 뒤에 깔린다 */
 #fx {
   position: fixed;
   inset: 0;
@@ -63,6 +90,7 @@ button {
   display: block;
 }
 
+/* 네 장의 화면 공통: 꽉 찬 화면, 기본은 숨김 */
 .screen {
   position: fixed;
   inset: 0;
@@ -74,7 +102,9 @@ button {
   display: flex;
 }
 
-/* ───── 시작 화면 ───── */
+/* ───── 2. 시작 화면 ─────
+   가운데 승차권 한 장. 왼쪽은 운행 정보, 절취선 오른쪽에 탑승 버튼.
+   아래에는 빗소리 미리 듣기 버튼과 안내 문구. */
 #title {
   flex-direction: column;
   align-items: center;
@@ -112,6 +142,7 @@ button {
   text-shadow: 0 0 40px rgba(240, 207, 126, 0.18);
 }
 
+/* 승차권 카드 (양옆의 반원 홈은 ::before/::after) */
 .ticket {
   position: relative;
   width: min(560px, 100%);
@@ -200,6 +231,7 @@ button {
   font-variant-numeric: tabular-nums;
 }
 
+/* 승차권 오른쪽 절취 부분 */
 .ticket .stub {
   width: 118px;
   display: flex;
@@ -217,6 +249,7 @@ button {
   color: #6b4a2c;
 }
 
+/* 탑승하기 버튼 */
 #board {
   appearance: none;
   border: 0;
@@ -246,6 +279,7 @@ button {
   box-shadow: 0 1px 0 #3a0e10;
 }
 
+/* 빗소리 미리 듣기 버튼 (켜지면 aria-pressed=true) */
 #sndOn {
   display: inline-flex;
   align-items: center;
@@ -286,7 +320,10 @@ button {
   text-align: center;
 }
 
-/* ───── 오프닝 ───── */
+/* ───── 3. 오프닝 ─────
+   영화처럼 위아래 검은 띠가 내려오고, 날짜(#kicker) → 큰 제목(#big)
+   → 자막(#cap) → 회중시계(#iwatch) 순으로 등장합니다.
+   배경 그림(터널, 밤 풍경)은 캔버스가 그립니다. */
 #intro {
   flex-direction: column;
   align-items: center;
@@ -294,6 +331,7 @@ button {
   cursor: pointer;
 }
 
+/* 위아래 검은 띠: .wide가 붙으면 내려온다 */
 .bar {
   position: absolute;
   left: 0;
@@ -316,6 +354,7 @@ button {
   height: 11vh;
 }
 
+/* 날짜·시각 한 줄 */
 #kicker {
   position: absolute;
   top: calc(11vh + 6vh);
@@ -336,6 +375,7 @@ button {
   opacity: 1;
 }
 
+/* 큰 제목: 글자(span)가 하나씩 떠오른다 */
 #big {
   position: relative;
   z-index: 3;
@@ -405,6 +445,7 @@ button {
   opacity: 1;
 }
 
+/* 자막: 기본은 화면 아래쪽 */
 #cap {
   position: absolute;
   left: 0;
@@ -455,6 +496,7 @@ button {
     0 0 3px #000;
 }
 
+/* 기관사의 회중시계: 떨림(grip) → 금(cracked) → 사라짐(gone) */
 #iwatch {
   position: absolute;
   z-index: 2;
@@ -599,7 +641,10 @@ button {
   }
 }
 
-/* ───── 게임: 화면 높이에 딱 맞추기 (세로 스크롤 없음) ───── */
+/* ───── 4. 게임 화면 ─────
+   화면 높이에 딱 맞추고 세로 스크롤을 만들지 않습니다.
+   윗줄(로고·노선표·시계·버튼) / 왼쪽(제목·목표·장면·내레이션·살펴볼 곳)
+   / 오른쪽(소지품·단서 수첩·일기) 세 덩어리로 나뉩니다. */
 #game.on {
   display: block;
   overflow: auto;
@@ -617,6 +662,7 @@ button {
   gap: 10px;
 }
 
+/* 윗줄: 로고 / 노선표 / 시계·버튼 */
 header.top {
   flex: none;
   display: flex;
@@ -657,6 +703,7 @@ header.top {
   flex: none;
 }
 
+/* 멈춘 열차 시각 표시 */
 .clock {
   display: flex;
   align-items: center;
@@ -687,6 +734,7 @@ header.top {
   }
 }
 
+/* 윗줄 작은 버튼 (소리, 처음부터) */
 .tbtn {
   min-height: 36px;
   padding: 0 12px;
@@ -703,6 +751,7 @@ header.top {
   border-color: var(--brass);
 }
 
+/* 객차 노선표: 칸 버튼과 연결 고리(.coupler) */
 .train {
   flex: 1;
   min-width: 0;
@@ -713,6 +762,7 @@ header.top {
   padding: 2px;
 }
 
+/* 칸 버튼: lit(갈 수 있음), current(현재), done(다 풂), disabled(잠김) */
 .car {
   flex: 0 1 104px;
   min-width: 64px;
@@ -807,6 +857,7 @@ header.top {
   opacity: 0.6;
 }
 
+/* 왼쪽 본문과 오른쪽 패널을 나누는 2단 배치 */
 .layout {
   flex: 1;
   min-height: 0;
@@ -837,6 +888,7 @@ header.top {
   scrollbar-color: var(--brass) transparent;
 }
 
+/* 칸 이름과 부제, 퍼즐 진행 표시 */
 .cartitle {
   flex: none;
   display: flex;
@@ -911,6 +963,7 @@ header.top {
   color: #fde9c0;
 }
 
+/* 장면 틀: 16:9 비율을 지키며 남은 높이에 맞춘다 */
 .stagebox {
   flex: 1 1 0;
   min-height: 0;
@@ -943,6 +996,7 @@ header.top {
   font-family: var(--font-display);
 }
 
+/* 장면 속 누를 수 있는 물건: 마우스를 올리면 금빛으로 빛난다 */
 .hot {
   cursor: pointer;
   transition: filter 0.25s;
@@ -958,6 +1012,7 @@ header.top {
   outline: none;
 }
 
+/* 물건 위 이름표 */
 #tag {
   position: absolute;
   z-index: 3;
@@ -982,25 +1037,6 @@ header.top {
   opacity: 1;
 }
 
-#card {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: rgba(5, 4, 3, 0.82);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.8s;
-  text-align: center;
-  z-index: 4;
-}
-
-#card.show {
-  opacity: 1;
-}
-
 /* 객차 소개가 끝나기 전에는 누를 수 없다 */
 #game.busy #scene,
 #game.busy #spots,
@@ -1013,23 +1049,7 @@ header.top {
   transition: opacity 0.3s;
 }
 
-#card small {
-  font-family: var(--font-type);
-  letter-spacing: 0.5em;
-  padding-left: 0.5em;
-  color: var(--brass);
-  font-size: 13px;
-}
-
-#card strong {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: clamp(28px, 5vw, 56px);
-  letter-spacing: 0.12em;
-  padding-left: 0.12em;
-  color: var(--gold);
-}
-
+/* 내레이션 줄과 '다음 칸으로' 버튼 */
 .narr {
   flex: none;
   display: flex;
@@ -1061,6 +1081,7 @@ header.top {
   white-space: nowrap;
 }
 
+/* 살펴볼 곳 버튼 목록과 범례 */
 .spotsrow {
   flex: none;
   display: flex;
@@ -1109,6 +1130,7 @@ header.top {
   background: #8d8576;
 }
 
+/* 살펴볼 곳 버튼: puz(퍼즐), seen(본 곳), solved(푼 곳) */
 .chip {
   display: inline-flex;
   align-items: center;
@@ -1147,6 +1169,7 @@ header.top {
   background: var(--ok);
 }
 
+/* 오른쪽 패널의 상자 (소지품, 단서 수첩, 일기) */
 .box {
   border-radius: 12px;
   background: var(--panel);
@@ -1173,6 +1196,7 @@ header.top {
   color: var(--muted);
 }
 
+/* 시계 부품 네 칸: 얻으면 .on으로 금빛이 된다 */
 .pslots {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -1214,6 +1238,7 @@ header.top {
   gap: 6px;
 }
 
+/* 소지품 한 줄 (아이콘 + 이름 + 설명) */
 .item {
   display: flex;
   gap: 10px;
@@ -1246,6 +1271,7 @@ header.top {
   font-size: 14px;
 }
 
+/* 단서·일기 한 줄 버튼 */
 .docbtn {
   display: flex;
   justify-content: space-between;
@@ -1267,6 +1293,7 @@ header.top {
   white-space: nowrap;
 }
 
+/* 방금 얻은 항목이 살짝 튀어 오르는 효과 */
 .new {
   animation: got 1.2s ease-out;
 }
@@ -1291,6 +1318,7 @@ header.top {
   text-align: center;
 }
 
+/* 화면 아래 짧은 알림 */
 #toast {
   position: fixed;
   left: 50%;
@@ -1319,6 +1347,7 @@ header.top {
   transform: translate(-50%, 0);
 }
 
+/* 좁은 화면: 오른쪽 패널을 아래로 내린다 */
 @media (max-width: 900px) {
   .wrap {
     height: auto;
@@ -1352,7 +1381,11 @@ header.top {
   }
 }
 
-/* ───── 모달 ───── */
+/* ───── 5. 팝업 ─────
+   모든 팝업은 #modal 안의 .panel 하나로 그립니다. 넓은 퍼즐은 .panel.wide.
+   한 번 열린 팝업은 힌트·안내 문구가 나와도 크기가 변하지 않게 자리를 미리 잡습니다.
+   아래로는 팝업 안에서 쓰는 양식들(자물쇠, 일기, 신문, 영수증, 오르골, 달력,
+   우편물, 시계 작업대)이 이어집니다. */
 #modal {
   position: fixed;
   inset: 0;
@@ -1369,6 +1402,7 @@ header.top {
   display: flex;
 }
 
+/* 팝업 종이: 기본 폭 660px */
 .panel {
   position: relative;
   width: min(660px, 100%);
@@ -1437,6 +1471,7 @@ header.top {
   transform: translateY(-50%);
 }
 
+/* 닫기 버튼 */
 .panel .x {
   position: absolute;
   top: 10px;
@@ -1449,6 +1484,7 @@ header.top {
   padding: 4px 8px;
 }
 
+/* 힌트 상자 */
 .panel .hint {
   border-left: 3px solid var(--maroon);
   padding: 6px 12px;
@@ -1475,6 +1511,7 @@ header.top {
   font-weight: 400;
 }
 
+/* 정답·오답 안내 문구 자리 (두 줄 높이를 미리 잡아 둔다) */
 .panel .msg {
   min-height: 3.4em;
   color: var(--maroon);
@@ -1483,6 +1520,7 @@ header.top {
   text-align: center;
 }
 
+/* 공통 버튼 (ghost는 테두리만) */
 .btn {
   background: var(--maroon);
   color: #fde9c0;
@@ -1510,6 +1548,7 @@ header.top {
   box-shadow: inset 0 0 0 1.5px var(--maroon);
 }
 
+/* 팝업 아래 버튼 줄 */
 .acts {
   display: flex;
   gap: 10px;
@@ -1518,6 +1557,7 @@ header.top {
   margin-top: 14px;
 }
 
+/* 숫자 다이얼 자물쇠: 위아래 버튼으로 숫자를 바꾼다 */
 .panel .lock {
   display: flex;
   justify-content: center;
@@ -1567,6 +1607,7 @@ header.top {
   color: var(--ink);
 }
 
+/* 틀렸을 때 흔들림 */
 .shake {
   animation: shake 0.4s;
 }
@@ -1586,6 +1627,7 @@ header.top {
   }
 }
 
+/* 일기 양식: 손글씨와 공책 줄 */
 .hand {
   font-family: var(--font-hand);
   font-size: 25px;
@@ -1600,6 +1642,7 @@ header.top {
   white-space: pre-line;
 }
 
+/* 신문·안내문 양식 */
 .news {
   column-gap: 20px;
   font-size: 15px;
@@ -1630,6 +1673,7 @@ header.top {
   padding: 0 2px;
 }
 
+/* 연필로 적은 메모 */
 .pencil {
   font-family: var(--font-hand);
   font-size: 24px;
@@ -1638,6 +1682,7 @@ header.top {
   margin: 8px 0 0;
 }
 
+/* 3호차 메뉴판 */
 .menu {
   background: #1d241f;
   color: #e8e2cf;
@@ -1656,6 +1701,7 @@ header.top {
   border-bottom: 1px dotted rgba(232, 226, 207, 0.4);
 }
 
+/* 3호차 영수증 */
 .rcpt {
   background: #f6f1e4;
   font-family: var(--font-type);
@@ -1686,6 +1732,7 @@ header.top {
   justify-content: space-between;
 }
 
+/* 3호차 오르골의 색 버튼과 입력 점(.dots) */
 .mbox {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -1728,6 +1775,7 @@ header.top {
   background: var(--ink);
 }
 
+/* 앞뒤로 뒤집히는 카드 (윤정의 사진) */
 .flip {
   perspective: 900px;
   width: min(300px, 100%);
@@ -1771,6 +1819,7 @@ header.top {
   display: block;
 }
 
+/* 2호차 그림책 (펼친 두 쪽) */
 .book {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1799,6 +1848,7 @@ header.top {
   transform: rotate(-2deg);
 }
 
+/* 기관사 연결문의 달력식 잠금장치 */
 .cal {
   max-width: 340px;
   margin: 0 auto;
@@ -1864,6 +1914,7 @@ header.top {
   gap: 10px;
 }
 
+/* 1호차 물품 보관함의 우편물 고르기 */
 .lost {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
@@ -1889,6 +1940,7 @@ header.top {
   padding: 7px 18px;
 }
 
+/* 2호차 벽 달력 (단서용, 누를 수 없음) */
 .mcal {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -1957,6 +2009,7 @@ header.top {
   aspect-ratio: 4/3;
 }
 
+/* 기관실 작업대: 소지품 부품을 시계에 끼워 넣는다 */
 .bench {
   display: grid;
   grid-template-columns: 1fr auto;
@@ -1969,6 +2022,7 @@ header.top {
   margin: 0 auto;
 }
 
+/* 작업대 아래 부품 쟁반 */
 .tray {
   display: grid;
   gap: 8px;
@@ -2019,6 +2073,7 @@ header.top {
   }
 }
 
+/* 2호차 창밖 별자리 크게 보기 */
 .starview {
   background: radial-gradient(ellipse at 50% 100%, #1b2a4e, #070b18 70%);
   border-radius: 6px;
@@ -2030,7 +2085,8 @@ header.top {
   width: 100%;
 }
 
-/* ───── 대사 ───── */
+/* ───── 6. 화면 전체 대사 ─────
+   눈을 뜨는 독백, 윤정의 목소리처럼 화면을 덮고 한 줄씩 넘기는 대사. */
 #voice {
   position: fixed;
   inset: 0;
@@ -2089,7 +2145,9 @@ header.top {
   }
 }
 
-/* ───── 엔딩 ───── */
+/* ───── 7. 엔딩 ─────
+   회중시계와 문장이 화면 가운데, 다시 달리는 기차는 캔버스 맨 아래에 보입니다.
+   문장(#eline)이 끝나면 마지막 제목(#eend)이 같은 자리에 떠오릅니다. */
 /* 엔딩: 회중시계와 글자를 한 묶음으로 화면 가운데에, 기차는 화면 맨 아래(캔버스) */
 #ending {
   flex-direction: column;
@@ -2118,6 +2176,7 @@ header.top {
   grid-area: 1/1;
 }
 
+/* 엔딩 문장 한 줄 */
 #eline {
   font-family: var(--font-display);
   font-size: clamp(18px, 2.7vw, 28px);
@@ -2142,6 +2201,7 @@ header.top {
   font-family: var(--font-body);
 }
 
+/* 마지막 제목과 다시 타기 버튼 */
 #eend {
   display: none;
   flex-direction: column;
@@ -2344,6 +2404,7 @@ header.top {
    THE LAST RUN — 엔딩 조명 변화
 ========================================= */
 
+/* 엔딩 화면 배치 */
 #ending {
   isolation: isolate;
 }
@@ -2695,7 +2756,6 @@ header.top {
   min-height: 8.6em;
 }
 
-
 /* ───── 호차 진입 카드 (눌러서 계속) ───── */
 #carcard {
   position: fixed;
@@ -2713,8 +2773,12 @@ header.top {
   opacity: 0;
   transition: opacity 0.6s;
 }
-#carcard.on { display: flex; }
-#carcard.show { opacity: 1; }
+#carcard.on {
+  display: flex;
+}
+#carcard.show {
+  opacity: 1;
+}
 #carcard small {
   font-family: var(--font-type);
   letter-spacing: 0.5em;
@@ -2749,15 +2813,26 @@ header.top {
   word-break: keep-all;
   text-wrap: balance;
 }
-#carcard .nudge { bottom: 34px; }
+#carcard .nudge {
+  bottom: 34px;
+}
 /* 첫 독백은 게임 화면이 비치지 않게 완전히 어둡게 */
-#voice.solid { background: #040302; }
+#voice.solid {
+  background: #040302;
+}
 
 /* 처음 들어갔을 때 눌러 볼 곳이 잠깐 반짝인다 */
-#scene.hint .hot { animation: hotPulse 1.3s ease-in-out 4; }
+#scene.hint .hot {
+  animation: hotPulse 1.3s ease-in-out 2;
+}
 @keyframes hotPulse {
-  0%, 100% { filter: none; }
-  50% { filter: drop-shadow(0 0 12px rgba(240, 207, 126, 0.95)) brightness(1.25); }
+  0%,
+  100% {
+    filter: none;
+  }
+  50% {
+    filter: drop-shadow(0 0 12px rgba(240, 207, 126, 0.95)) brightness(1.25);
+  }
 }
 
 /* 엔딩 부제 */
@@ -2769,7 +2844,6 @@ header.top {
   padding-left: 0.3em;
   color: #e9d9ae;
 }
-
 
 /* ───── 휴대폰: 세로로 들면 돌려 달라고 안내 ───── */
 #rotate {
@@ -2802,11 +2876,19 @@ header.top {
   font-size: 14px;
 }
 @keyframes turnPhone {
-  0%, 25% { transform: rotate(0); }
-  60%, 100% { transform: rotate(-90deg); }
+  0%,
+  25% {
+    transform: rotate(0);
+  }
+  60%,
+  100% {
+    transform: rotate(-90deg);
+  }
 }
 @media (orientation: portrait) and (max-width: 820px) and (pointer: coarse) {
-  #rotate { display: flex; }
+  #rotate {
+    display: flex;
+  }
 }
 
 /* ───── 낮은 가로 화면(휴대폰 가로): 장면은 왼쪽 가득, 글과 소지품은 오른쪽 ───── */
@@ -2817,18 +2899,52 @@ header.top {
     gap: 4px;
     padding: 4px max(10px, env(safe-area-inset-right)) 6px max(10px, env(safe-area-inset-left));
   }
-  header.top { padding-bottom: 4px; gap: 8px; flex-wrap: nowrap; }
-  .logo svg { width: 24px; height: 24px; }
-  .logo h1 { display: none; }
-  .clock { padding: 1px 8px; }
-  .clock .s { display: none; }
-  .clock .t { font-size: 15px; }
-  .tbtn { min-height: 28px; padding: 0 8px; font-size: 12px; }
-  .train { order: 0; flex: 1 1 0; }
-  .car { min-height: 32px; flex-basis: 76px; padding: 9px 4px 3px; font-size: 10px; }
-  .car b { font-size: 12px; }
-  .car::before { top: 3px; height: 4px; }
-  .car.done::after { top: 9px; }
+  header.top {
+    padding-bottom: 4px;
+    gap: 8px;
+    flex-wrap: nowrap;
+  }
+  .logo svg {
+    width: 24px;
+    height: 24px;
+  }
+  .logo h1 {
+    display: none;
+  }
+  .clock {
+    padding: 1px 8px;
+  }
+  .clock .s {
+    display: none;
+  }
+  .clock .t {
+    font-size: 15px;
+  }
+  .tbtn {
+    min-height: 28px;
+    padding: 0 8px;
+    font-size: 12px;
+  }
+  .train {
+    order: 0;
+    flex: 1 1 0;
+  }
+  .car {
+    min-height: 32px;
+    flex-basis: 76px;
+    padding: 9px 4px 3px;
+    font-size: 10px;
+  }
+  .car b {
+    font-size: 12px;
+  }
+  .car::before {
+    top: 3px;
+    height: 4px;
+  }
+  .car.done::after {
+    top: 9px;
+  }
 
   .layout {
     display: grid;
@@ -2838,10 +2954,20 @@ header.top {
     flex: 1;
     min-height: 0;
   }
-  .layout > .main { display: contents; }
-  .cartitle { display: none; }
-  .stagebox { grid-column: 1; grid-row: 1 / 5; flex: none; }
-  .scene { width: min(100cqw, calc(100cqh * 16 / 9)); }
+  .layout > .main {
+    display: contents;
+  }
+  .cartitle {
+    display: none;
+  }
+  .stagebox {
+    grid-column: 1;
+    grid-row: 1 / 5;
+    flex: none;
+  }
+  .scene {
+    width: min(100cqw, calc(100cqh * 16 / 9));
+  }
   .goal {
     grid-column: 2;
     grid-row: 1;
@@ -2851,7 +2977,10 @@ header.top {
     font-size: 12px;
     line-height: 1.4;
   }
-  .goal::before { font-size: 9px; padding: 1px 6px 1px 8px; }
+  .goal::before {
+    font-size: 9px;
+    padding: 1px 6px 1px 8px;
+  }
   .narr {
     grid-column: 2;
     grid-row: 2;
@@ -2861,12 +2990,29 @@ header.top {
     max-height: 100px;
     padding: 5px 8px;
   }
-  #say { font-size: 12px; line-height: 1.5; }
-  #next .btn { padding: 5px 10px; font-size: 12px; }
-  .spotsrow { grid-column: 2; grid-row: 3; }
-  .legend { display: none; }
-  .spots { gap: 4px; }
-  .chip { min-height: 26px; padding: 0 9px; font-size: 11px; }
+  #say {
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  #next .btn {
+    padding: 5px 10px;
+    font-size: 12px;
+  }
+  .spotsrow {
+    grid-column: 2;
+    grid-row: 3;
+  }
+  .legend {
+    display: none;
+  }
+  .spots {
+    gap: 4px;
+  }
+  .chip {
+    min-height: 26px;
+    padding: 0 9px;
+    font-size: 11px;
+  }
   .side {
     grid-column: 2;
     grid-row: 4;
@@ -2875,18 +3021,47 @@ header.top {
     gap: 6px;
     padding-right: 0;
   }
-  .box { padding: 8px; }
-  .box h3 { font-size: 14px; margin-bottom: 5px; }
-  .pslots { gap: 4px; margin-bottom: 5px; }
-  .item { padding: 4px 8px; }
+  .box {
+    padding: 8px;
+  }
+  .box h3 {
+    font-size: 14px;
+    margin-bottom: 5px;
+  }
+  .pslots {
+    gap: 4px;
+    margin-bottom: 5px;
+  }
+  .item {
+    padding: 4px 8px;
+  }
 
   /* 시작 화면도 낮은 화면에 맞춰 줄이기 */
-  #title { gap: 8px; padding: 8px 16px; }
-  #title .eyebrow { margin-bottom: 2px; }
-  #title h1 { font-size: 34px; }
-  .ticket .route { margin: 4px 0; font-size: 20px; }
-  .ticket .main { padding: 10px 14px; }
-  .ticket dl { font-size: 12px; }
-  #sndOn { min-height: 34px; font-size: 13px; }
-  #title .note { display: none; }
+  #title {
+    gap: 8px;
+    padding: 8px 16px;
+  }
+  #title .eyebrow {
+    margin-bottom: 2px;
+  }
+  #title h1 {
+    font-size: 34px;
+  }
+  .ticket .route {
+    margin: 4px 0;
+    font-size: 20px;
+  }
+  .ticket .main {
+    padding: 10px 14px;
+  }
+  .ticket dl {
+    font-size: 12px;
+  }
+  #sndOn {
+    min-height: 34px;
+    font-size: 13px;
+  }
+  #title .note {
+    display: none;
+  }
 }
