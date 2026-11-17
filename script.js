@@ -1,8 +1,31 @@
+/* =====================================================================
+   시간이 멈춘 열차 — 게임 스크립트
+
+   전체 흐름
+     시작 화면 → runIntro() 오프닝 → startGame() → 4호차부터 enterCar()
+     → 각 칸에서 물건을 눌러(openSpot) 퍼즐을 풀고 시계 부품·일기를 모음
+     → 기관실에서 시계를 고치고 편지를 건넴 → runEnding() 엔딩
+
+   구역
+     소리        A 객체 하나가 모든 효과음·음악을 WebAudio로 직접 합성
+     그림 조각   회중시계, 톱니바퀴, 아이콘, 윤정의 사진 (SVG 문자열)
+     캔버스 연출 밤 풍경, 터널, 기관실 불빛, 시계 파편 (#fx 캔버스)
+     오프닝      자막·대기·건너뛰기 처리와 runIntro()
+     게임 상태   S(진행 상태), ITEMS(소지품·일기), 오른쪽 패널 그리기
+     팝업        openModal(), 숫자 자물쇠, 화면 전체 대사 speak()
+     객실 그림   창문·좌석·문 같은 조각과 SCENES(칸별 장면)
+     진행        CARS(칸 정보), SPOTS(살펴볼 곳), ON(물건별 동작), enterCar()
+     엔딩        runEnding()
+
+   전체를 즉시 실행 함수로 감싸 전역 변수를 만들지 않습니다.
+   ===================================================================== */
 (function () {
   'use strict';
   // 선택자로 요소 하나 찾기
+  // 예) $('#modal') — 처음 일치하는 요소 하나를 돌려준다
   const $ = (s) => document.querySelector(s);
   // 태그·클래스·내용으로 새 요소 만들기
+  // t: 태그 이름, c: 클래스 이름(선택), h: 안에 넣을 HTML(선택)
   const el = (t, c, h) => {
     const e = document.createElement(t);
 
@@ -18,6 +41,8 @@
   const REDUCED = matchMedia('(prefers-reduced-motion:reduce)').matches;
 
   // 시드 기반 난수 생성기 (항상 같은 그림이 나오도록)
+  // 같은 시드(a)를 넣으면 언제나 같은 순서의 0~1 난수가 나온다.
+  // 빗방울·별·산 모양이 새로고침해도 바뀌지 않게 하려고 쓴다.
   function mul(a) {
     return function () {
       a |= 0;
@@ -29,6 +54,9 @@
   }
 
   /* ═════════ 소리 (모두 WebAudio 합성) ═════════ */
+  // 소리 파일 없이 발진기(oscillator)와 잡음(noise)을 걸러 모든 소리를 만든다.
+  // 브라우저 정책상 첫 클릭·터치 안에서 init()을 불러야 소리가 난다.
+  // m은 전체 음량, rn은 빗소리, rum은 열차 진동, tg는 인트로 음악, mg는 엔딩 음악.
   const A = {
     c: null,
     m: null,
@@ -653,6 +681,7 @@
   };
 
   /* ═════════ 그림 조각 ═════════ */
+  // cx, cy: 중심, r: 바깥 반지름, n: 톱니 개수. 가운데 구멍까지 한 경로로 만든다.
   function gear(cx, cy, r, n) {
     let d = '';
     const ri = r * 0.8,
@@ -693,6 +722,7 @@
     );
   }
   // 태엽(나선) 모양의 SVG 경로 만들기
+  // r0에서 r1까지 turns 바퀴 감기는 나선. 회중시계 안의 태엽 그림에 쓴다.
   function spiral(cx, cy, r0, r1, turns) {
     let d = '';
     const N = turns * 28;
@@ -709,6 +739,9 @@
   }
   let uid = 0;
   // 회중시계 그림 (부품 유무와 바늘 각도 지정)
+  // o.spring / gear / hand / glass: 각 부품을 그릴지 (0이면 빈 자리 점선)
+  // o.h, o.m, o.s: 시침·분침·초침 각도(도). 기본값은 11시 59분
+  // 인트로·엔딩·소지품 팝업·작업대에서 같은 함수로 시계를 그린다.
   function watchSVG(o) {
     o = Object.assign({ spring: 1, gear: 1, hand: 1, glass: 1, h: 359.5, m: 354, s: 0 }, o || {});
     const u = 'w' + uid++;
@@ -827,6 +860,7 @@
   };
 
   // 윤정의 사진 — 긴 생머리, 노란 우산을 어깨에 걸친 모습
+  // 노란 우산·파란 코트·빨간 목도리·초록 기차표가 오르골 퍼즐의 정답 순서와 이어진다.
   function photoArt() {
     return (
       '<svg viewBox="0 0 240 240" role="img" aria-label="노란 우산을 든 윤정의 사진">' +
@@ -924,6 +958,7 @@
   let W = 0,
     H = 0;
   // 창 크기에 맞춰 캔버스 크기 조정
+  // 화면 배율(devicePixelRatio)을 반영해 흐릿하지 않게 그린다. 최대 2배.
   function resize() {
     const d = Math.min(window.devicePixelRatio || 1, 2);
     W = window.innerWidth;
@@ -935,6 +970,8 @@
   window.addEventListener('resize', resize);
   resize();
   // 캔버스 연출의 현재 상태
+  // mode: 지금 그리는 장면 (title, tunnel, land, cab, endStill, endWake, end, off)
+  // zoom/zoomTo: 풍경 확대 연출, shards: 날아가는 시계 파편, done: 터널이 끝나면 부를 함수
   const FX = {
     mode: 'title',
     t0: performance.now(),
@@ -978,6 +1015,8 @@
   })();
 
   // 기관차와 객차 네 칸 그리기
+  // c: 캔버스, fx: 기관차 앞 x, y: 선로 높이, h: 기차 크기 단위, t: 시간(초)
+  // moving이 거짓이면 증기가 흐르지 않고 제자리에 멈춘다. 그린 전체 길이를 돌려준다.
   function drawTrain(c, fx, y, h, t, moving) {
     // 왼쪽이 진행 방향: 기관차 → 1호차 … 4호차
     const lw = h * 3.9;
@@ -1063,6 +1102,8 @@
     return x - fx;
   }
   // 밤 풍경(하늘·달·산·다리·기차·비) 그리기
+  // o.stars: 별 흐름 속도, o.rain: 1(내림)·2(공중에 멈춤), o.dawn: 새벽빛
+  // o.low: 다리(기차) 높이 비율 — 값이 클수록 화면 아래쪽, o.trainX: 기차 위치 함수
   function drawLand(t, o) {
     const c = cx;
     const sky = c.createLinearGradient(0, 0, 0, H);
@@ -1191,6 +1232,8 @@
   }
   const TUN = { v: 7.2, T0: 8, T1: 36 };
   // 인트로 터널 통과 장면 그리기
+  // 아치 고리를 앞에서 뒤로 겹쳐 그려 안으로 달려 들어가는 원근을 만든다.
+  // 벽돌 줄눈·리브·전선·등불·레일을 고리마다 그리고, 끝의 빛에 닿으면 FX.done을 부른다.
   function drawTunnel(t) {
     const c = cx,
       p = t * TUN.v,
@@ -1575,6 +1618,7 @@
   }
   let last = performance.now();
   // 매 프레임 현재 연출 장면을 그리는 반복 함수
+  // FX.mode에 따라 알맞은 그리기 함수를 고른다. 게임 중(off)에는 아무것도 그리지 않는다.
   function loop(now) {
     requestAnimationFrame(loop);
     const dt = Math.min(0.05, (now - last) / 1000);
@@ -1664,6 +1708,8 @@
     },
   };
   // 일정 시간 기다리기 (건너뛰기·클릭으로 중단 가능)
+  // hard가 거짓이면 화면을 눌러 바로 넘길 수 있다.
+  // 건너뛰기를 누르면 'skip'으로 거부(reject)되어 오프닝 전체가 끝난다.
   function wait(ms, hard) {
     return new Promise((res, rej) => {
       if (skipFlag) return rej('skip');
@@ -1682,6 +1728,7 @@
     kick = $('#kicker'),
     iw = $('#iwatch');
   // 인트로 자막 한 줄을 보여 주고 기다리기
+  // label: 말하는 사람(빈칸이면 내레이션), text: 대사. 한동안 안 누르면 계속 표시가 뜬다.
   async function line(label, text) {
     cap.classList.remove('show');
     await wait(450, true);
@@ -1697,6 +1744,9 @@
     } // 화면을 누를 때까지 기다림
   }
   // 인트로 전체 진행 (터널 → 제목 → 안내 방송 → 시계 파괴)
+  // 터널 통과 → 밤 풍경과 큰 제목 → 안내 방송과 박수 → 기관실의 회중시계
+  // → 시계가 깨지고 파편이 흩어짐 → 모든 소리가 끊기고 시간이 멈춤 → startGame()
+  // 어느 단계에서든 건너뛰기를 누르면 바로 게임으로 넘어간다.
   async function runIntro() {
     skipFlag = false;
     show('intro');
@@ -1916,6 +1966,8 @@
   });
 
   /* ═════════ 게임 상태 ═════════ */
+  // car: 지금 칸, reached: 가 본 가장 앞 칸, flags: 푼 퍼즐·본 대사 기록
+  // inv: 소지품·일기, notes: 단서 수첩, seen: 살펴본 물건, hints: 연 힌트
   const fresh = () => ({
     car: 4,
     reached: 4,
@@ -1928,6 +1980,8 @@
   });
   let S = fresh();
   // 소지품과 일기 목록 (이름·아이콘·상세 보기)
+  // n: 이름, ic: 아이콘, view(): 팝업에 들어갈 HTML, part: 시계 부품 여부
+  // after(): 팝업이 열린 뒤 버튼을 연결할 때 쓴다 (예: 사진 뒤집기)
   const ITEMS = {
     case: {
       n: '빈 회중시계 케이스',
@@ -2036,6 +2090,7 @@
     },
   };
   // 기록을 처음 읽고 닫았을 때 주인공이 떠올리는 한마디
+  // 팝업을 닫는 순간 내레이션 줄에 한 번만 나온다. (S.flags.r_아이디로 기록)
   const REFLECT = {
     diary1: '기관사에게도 누군가를 처음 만난 봄이 있었다. 노란 우산을 쓴 사람, 윤정.',
     photo: '사진 속 이 사람이 윤정인 모양이다. 뒷면의 글씨가 마음에 걸린다.',
@@ -2061,6 +2116,14 @@
     letter: '“한시원에게”. 단단히 봉인되어 있다',
   };
   const DOCS = ['diary1', 'diaryWatch', 'diaryAnniv', 'diaryWard', 'diary3', 'diary4'];
+  // 손글씨 글꼴은 글자 묶음별로 나눠 받아지므로, 일기에 쓰인 글자를 미리 받아 둔다
+  // (처음 보는 글자만 늦게 바뀌어 보이는 일 없이, 모든 일기가 같은 효과로 나타나게)
+  try {
+    const handText = DOCS.map((id) => ITEMS[id].view())
+      .join('')
+      .replace(/<[^>]+>/g, '');
+    document.fonts.load('25px "Nanum Pen Script"', handText + '자정에, 새벽역에서. — 윤정');
+  } catch (e) {}
   // 소지품 보유 여부
   const has = (id) => S.inv.includes(id);
   // 모은 시계 부품 개수
@@ -2074,6 +2137,7 @@
     toast.t = setTimeout(() => e.classList.remove('show'), 2400);
   }
   // 장면 아래 내레이션 문장 바꾸기
+  // 바뀔 때마다 살짝 떠오르는 효과(.in)를 다시 건다.
   function say(t) {
     const e = $('#say');
     e.textContent = t;
@@ -2082,6 +2146,7 @@
     e.classList.add('in');
   }
   // 소지품 추가
+  // quiet이 참이면 효과음과 알림 없이 조용히 넣는다. 이미 있으면 무시.
   function addItem(id, quiet) {
     if (has(id)) return;
     S.inv.push(id);
@@ -2092,6 +2157,8 @@
     }
   }
   // 오른쪽 소지품·단서 수첩·일기 목록 다시 그리기
+  // newId: 방금 얻은 항목 — 살짝 튀어 오르는 효과를 준다.
+  // 일기는 얻은 순서가 아니라 DOCS에 적힌 날짜 순서로 보여 준다.
   function renderSide(newId) {
     const inv = S.inv.filter((i) => !DOCS.includes(i)),
       docs = S.inv
@@ -2153,6 +2220,8 @@
   // 시계 부품마다 함께 나오는 기관사의 일기
   const PART_DOC = { spring: 'diaryWatch', gear: 'diaryAnniv', hand: 'diaryWard', glass: 'diary4' };
   // 부품을 얻었을 때: 부품 팝업을 열고, 함께 나온 일기를 바로 읽을 수 있게 한다
+  // id: 부품 아이디. 부품과 짝지어진 일기(PART_DOC)를 함께 소지품에 넣고,
+  // 부품 팝업 아래에 '함께 나온 일기 읽기' 버튼을 붙인다.
   function gotPart(id) {
     addItem(id);
     const doc = PART_DOC[id];
@@ -2170,6 +2239,7 @@
     $('#modal .body').append(acts);
   }
   // 소지품 상세 팝업 열기
+  // got이 참이면 팝업 머리에 '획득', 아니면 '소지품'이라고 쓴다.
   function showItem(id, got) {
     const it = ITEMS[id];
     pendingSay = REFLECT[id] && !S.flags['r_' + id] ? id : null;
@@ -2180,6 +2250,9 @@
   /* ═════════ 모달 ═════════ */
   let lastFocus = null;
   // 팝업 열기 (제목·내용·힌트 버튼)
+  // o.k: 머리 글씨, o.title: 제목, o.html: 내용, o.wide: 넓은 팝업
+  // 내용 안의 .hint는 '힌트 보기' 버튼 뒤에 감춰 두되, 자리는 미리 잡아 크기가 변하지 않게 한다.
+  // 내용이 들어간 .body 요소를 돌려주므로, 부른 쪽에서 버튼을 연결할 수 있다.
   function openModal(o) {
     const m = $('#modal');
     lastFocus = document.activeElement;
@@ -2228,6 +2301,8 @@
   }
 
   // 팝업 닫기
+  // 기록을 처음 읽은 뒤라면 주인공의 한마디(REFLECT)를 내레이션에 띄운다.
+  // 장면 속 물건으로는 포커스를 되돌리지 않는다 (이름표가 남지 않게).
   function closeModal() {
     $('#modal').classList.remove('on');
     if (pendingSay) {
@@ -2245,6 +2320,7 @@
   }
 
   // 숫자 다이얼 자물쇠 만들기
+  // n: 자리 수, sep: 구분자를 넣을 위치. get()으로 지금 숫자열을 읽는다.
   function lock(n, sep) {
     const v = Array(n).fill(0),
       e = el('div', 'lock');
@@ -2278,6 +2354,8 @@
   }
 
   // 숫자 자물쇠 퍼즐 팝업 열기
+  // o.title·desc·hint: 문구, o.n: 자리 수, o.answer: 정답, o.ok(): 맞혔을 때 할 일
+  // o.wrong: 틀렸을 때 문구, o.btn: 확인 버튼 글씨
   function puzzle(o) {
     const b = openModal({
       k: o.k || '퍼즐',
@@ -2310,6 +2388,8 @@
   }
 
   // 화면 전체 독백/대사를 한 줄씩 보여 주기
+  // lines: 한 줄씩 보여 줄 문장 배열, label: 말하는 사람
+  // 모든 줄을 넘기면 끝나는 Promise를 돌려주므로 await로 기다릴 수 있다.
   function speak(lines, label, opt) {
     return new Promise((res) => {
       const v = $('#voice'),
@@ -2348,6 +2428,7 @@
     '<pattern id="pRug" width="60" height="40" patternUnits="userSpaceOnUse"><path d="M0 20L30 0L60 20L30 40Z" fill="none" stroke="#f0cf7e" stroke-opacity=".14" stroke-width="2"/></pattern>' +
     '</defs>';
   // 비 내리는 창밖 풍경 그림
+  // seed가 같으면 빗방울 위치가 같다. 창마다 다른 seed를 준다.
   function rainWin(seed, w, h) {
     const r = mul(seed);
     let s =
@@ -2413,6 +2494,7 @@
     ],
   ];
   // 별자리가 보이는 창밖 풍경 그림
+  // i: 별자리 번호(0~2). 별 개수가 2호차 상자 퍼즐(4·6·3)의 정답이다.
   function starWin(i, sc) {
     const p = CONS[i];
     let s =
@@ -2437,6 +2519,7 @@
     return s;
   }
   // 놋쇠 테두리 창문 그림
+  // x: 창 왼쪽 위치, inner: 창밖 그림, id·label: 누를 수 있게 할 때만 준다.
   function win(x, inner, id, label) {
     const y = 215,
       w = 250,
@@ -2550,6 +2633,7 @@
     );
   }
   // 다음 칸으로 가는 문 그림
+  // to: 문 위 표지판 글씨, open: 열렸으면 창에 불빛이 들어온다.
   function door(to, open) {
     return (
       '<g class="hot" data-id="door" tabindex="0" role="button" aria-label="' +
@@ -2616,6 +2700,7 @@
     return s + '</g>';
   }
   // 객차 공통 배경(벽·천장·바닥) 위에 내용 얹기
+  // c: 칸 색(wall·ceil·trim·dado·floor)과 조명 위치(lamps), body: 칸마다 다른 물건들
   function shell(c, body) {
     return (
       '<svg viewBox="0 0 1600 900" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="' +
@@ -2662,6 +2747,7 @@
     floor: '#4a1719',
   };
   // 객차별 장면 그림
+  // 열쇠는 칸 번호(4~1, 기관실 0). 진행 상황(S.flags)에 따라 그림이 조금씩 달라진다.
   const SCENES = {
     // 4호차 장면
     4: () =>
@@ -3191,6 +3277,7 @@
       '</svg>',
   };
   // 객차 정보 (이름·부제·목표)
+  // n: 칸 이름, kind: 종류, sub: 부제, goal: 화면 위 목표 문장
   const CARS = {
     4: {
       n: '4호차',
@@ -3227,6 +3314,8 @@
   // 퍼즐 완료 여부 확인 함수 만들기
   const F = (k) => () => !!S.flags[k];
   /* 칸마다 살펴볼 곳: lock은 퍼즐, clue는 단서 수첩에 기록, look은 그냥 보기, door는 다음 칸 */
+  // id: 물건 아이디(SCENES의 data-id, ON의 함수 이름과 같다), label: 버튼 글씨
+  // done(): 퍼즐이나 문이 풀렸는지 확인하는 함수
   const SPOTS = {
     4: [
       { id: 'clock', label: '벽시계', type: 'lock', done: F('clock') },
@@ -3300,6 +3389,8 @@
     return S.seen[c + ':' + m.id] ? 'seen' : '';
   }
   // 물건을 눌렀을 때 처리 (소리·단서 기록·동작 실행)
+  // c: 칸 번호, id: 물건 아이디. 소개 중이면 무시한다.
+  // 단서면 종이 소리와 함께 단서 수첩에 기록하고, ON[c][id]를 실행한다.
   function openSpot(c, id) {
     const m = meta(c, id);
     if (!m) return;
@@ -3320,6 +3411,7 @@
     renderSide();
   }
   // 현재 객차 화면 전체 다시 그리기
+  // 노선표, 제목·목표, 장면 그림, 선택지, 오른쪽 패널을 모두 새로 그린다.
   function render() {
     const c = CARS[S.car];
     $('#eyebrow').textContent = c.n + ' · ' + c.kind;
@@ -3447,6 +3539,9 @@
     }, 250);
   }
   // 객차 이동: 소개 카드를 누르면 플레이 시작
+  // c: 들어갈 칸 번호. 문 소리 → 장면이 스며들듯 나타남 → 제목 카드 → 첫 안내
+  // 처음 4호차에서는 눈을 뜨는 독백 뒤 회중시계 케이스를 얻고 바로 팝업을 연다.
+  // 소개가 끝날 때까지는 setBusy(true)로 물건과 선택지를 누를 수 없다.
   async function enterCar(c) {
     const run = ++busyRun;
     setBusy(true);
@@ -3483,6 +3578,7 @@
     if (run === busyRun) setBusy(false);
   }
   // 인트로가 끝나고 게임 화면 시작
+  // 캔버스 연출을 멈추고 게임 화면을 연 뒤, 저장된 칸(보통 4호차)에 들어간다.
   function startGame() {
     FX.mode = 'off';
     cx.clearRect(0, 0, W, H);
@@ -3509,6 +3605,8 @@
     openModal({ k: '살펴보기', title: curLabel, html: '<p>' + t + '</p>' });
   }
   // 물건을 눌렀을 때의 동작 (객차별)
+  // 열쇠는 칸 번호, 그 안의 함수 이름은 물건 아이디.
+  // 단서는 openModal, 단서가 아닌 물건은 look, 퍼즐은 puzzle 또는 직접 만든 팝업을 연다.
   const ON = {
     // 4호차 물건별 동작
     4: {
@@ -4149,6 +4247,7 @@
   const tagEl = $('#tag'),
     wrapEl = $('#sceneWrap');
   // 물건 위에 이름표 띄우기
+  // h: 물건 요소. 장면 위쪽이면 이름표를 물건 아래에 붙인다(.below).
   function showTag(h) {
     const m = meta(S.car, h.dataset.id);
     if (!m) return;
@@ -4193,6 +4292,7 @@
   };
 
   // 처음부터 다시 시작
+  // 진행 중인 엔딩·소리를 모두 멈추고, 상태를 처음으로 되돌려 시작 화면으로 간다.
   function resetAll() {
     endRun++;
 
@@ -4219,6 +4319,10 @@
   let endRun = 0;
 
   // 엔딩 전체 진행 (정지 → 각성 → 자정 출발)
+  // 1) 모든 것이 멈춘 세상 → 2) 초침이 한 칸씩 움직이며 비와 별이 깨어남
+  // → 3) 자정, 열차가 다시 달리고 박수와 기관사의 대사 → 새벽역 도착
+  // → 주인공의 마무리 → 아이의 낙서 → 마지막 제목
+  // '처음부터'를 누르면 endRun이 바뀌어 진행 중인 엔딩이 바로 멈춘다.
   async function runEnding() {
     const run = ++endRun;
 
@@ -4417,6 +4521,7 @@
   $('#again').onclick = resetAll;
 
   /* ═════════ 시작 ═════════ */
+  // 미리보기 도구가 넘겨준 진행 상태가 있으면 시작 화면을 건너뛰고 이어서 한다.
   function start(d) {
     if (d && d.started && d.flags) {
       S = Object.assign(fresh(), d);
