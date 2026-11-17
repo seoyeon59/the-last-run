@@ -3065,8 +3065,3 @@ header.top {
     display: none;
   }
 }
-
-/* 일기를 열 때 잠깐 바탕 글꼴로 보이는 순간 (script.js의 handSwap) */
-.hand.pre {
-  font-family: "Gowun Batang", serif;
-}

@@ -2117,21 +2117,13 @@
   };
   const DOCS = ['diary1', 'diaryWatch', 'diaryAnniv', 'diaryWard', 'diary3', 'diary4'];
   // 손글씨 글꼴은 글자 묶음별로 나눠 받아진다. 일기에 쓰이는 글자를 미리 받아 두어,
-  // 실제 다운로드 때문에 일기마다 바뀌는 시점이 달라지는 일이 없게 한다.
+  // 어떤 일기를 열어도 처음부터 바로 손글씨로 보이게 한다.
   try {
     const handText = DOCS.map((id) => ITEMS[id].view())
       .join('')
       .replace(/<[^>]+>/g, '');
     document.fonts.load('25px "Nanum Pen Script"', handText);
   } catch (e) {}
-  // 일기를 열 때마다: 먼저 바탕 글꼴로 보였다가 잠시 뒤 손글씨로 바뀐다 (모든 일기에 똑같이)
-  const HAND_SWAP_MS = 400;
-  function handSwap(body) {
-    const h = body && body.querySelector('.hand');
-    if (!h) return;
-    h.classList.add('pre');
-    setTimeout(() => h.classList.remove('pre'), HAND_SWAP_MS);
-  }
   // 소지품 보유 여부
   const has = (id) => S.inv.includes(id);
   // 모은 시계 부품 개수
@@ -2261,7 +2253,6 @@
     const it = ITEMS[id];
     pendingSay = REFLECT[id] && !S.flags['r_' + id] ? id : null;
     const b = openModal({ k: got ? '획득' : '소지품', title: it.n, html: it.view() });
-    handSwap(b);
     if (it.after) it.after(b);
   }
 
